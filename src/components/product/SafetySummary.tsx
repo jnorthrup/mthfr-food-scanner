@@ -1,64 +1,80 @@
-'use client';
+"use client";
 
-import { motion } from 'framer-motion';
-import { Shield, ShieldAlert, ShieldQuestion, AlertTriangle, CheckCircle2, XCircle, HelpCircle } from 'lucide-react';
-import type { ProductSafetySummary, SafetyStatus } from '@/types';
-import { cn } from '@/lib/utils';
+import { motion } from "framer-motion";
+import {
+  Shield,
+  ShieldAlert,
+  ShieldQuestion,
+  AlertTriangle,
+  CheckCircle2,
+  XCircle,
+  HelpCircle,
+} from "lucide-react";
+import type { ProductSafetySummary, SafetyStatus } from "@/types";
+import { cn } from "@/lib/utils";
 
 interface SafetySummaryProps {
   summary: ProductSafetySummary;
   compact?: boolean;
 }
 
-const statusConfig: Record<SafetyStatus, {
-  icon: typeof Shield;
-  label: string;
-  color: string;
-  bgColor: string;
-  borderColor: string;
-}> = {
+const statusConfig: Record<
+  SafetyStatus,
+  {
+    icon: typeof Shield;
+    label: string;
+    color: string;
+    bgColor: string;
+    borderColor: string;
+  }
+> = {
   safe: {
     icon: Shield,
-    label: 'MTHFR Safe',
-    color: 'text-emerald-600 dark:text-emerald-400',
-    bgColor: 'bg-emerald-50 dark:bg-emerald-950/50',
-    borderColor: 'border-emerald-200 dark:border-emerald-800',
+    label: "MTHFR Safe",
+    color: "text-emerald-600 dark:text-emerald-400",
+    bgColor: "bg-emerald-50 dark:bg-emerald-950/50",
+    borderColor: "border-emerald-200 dark:border-emerald-800",
   },
   unsafe: {
     icon: ShieldAlert,
-    label: 'Contains Unsafe Ingredients',
-    color: 'text-red-600 dark:text-red-400',
-    bgColor: 'bg-red-50 dark:bg-red-950/50',
-    borderColor: 'border-red-200 dark:border-red-800',
+    label: "Contains Unsafe Ingredients",
+    color: "text-red-600 dark:text-red-400",
+    bgColor: "bg-red-50 dark:bg-red-950/50",
+    borderColor: "border-red-200 dark:border-red-800",
   },
   unknown: {
     icon: ShieldQuestion,
-    label: 'Requires Review',
-    color: 'text-amber-600 dark:text-amber-400',
-    bgColor: 'bg-amber-50 dark:bg-amber-950/50',
-    borderColor: 'border-amber-200 dark:border-amber-800',
+    label: "Requires Review",
+    color: "text-amber-600 dark:text-amber-400",
+    bgColor: "bg-amber-50 dark:bg-amber-950/50",
+    borderColor: "border-amber-200 dark:border-amber-800",
   },
 };
 
-export function SafetySummary({ summary, compact = false }: SafetySummaryProps) {
+export function SafetySummary({
+  summary,
+  compact = false,
+}: SafetySummaryProps) {
   const config = statusConfig[summary.overallStatus];
   const StatusIcon = config.icon;
 
   if (compact) {
     return (
-      <div 
+      <div
         data-design-id="safety-summary-compact"
         className={cn(
           "flex items-center gap-2 px-3 py-1.5 rounded-full border",
           config.bgColor,
-          config.borderColor
+          config.borderColor,
         )}
       >
         <StatusIcon className={cn("w-4 h-4", config.color)} />
         <span className={cn("text-sm font-medium", config.color)}>
-          {summary.overallStatus === 'safe' ? 'Safe' : 
-           summary.overallStatus === 'unsafe' ? `${summary.unsafeCount} Unsafe` : 
-           'Review Needed'}
+          {summary.overallStatus === "safe"
+            ? "Safe"
+            : summary.overallStatus === "unsafe"
+              ? `${summary.unsafeCount} Unsafe`
+              : "Review Needed"}
         </span>
       </div>
     );
@@ -72,22 +88,36 @@ export function SafetySummary({ summary, compact = false }: SafetySummaryProps) 
       className={cn(
         "rounded-2xl border-2 p-5 space-y-4",
         config.bgColor,
-        config.borderColor
+        config.borderColor,
       )}
     >
-      <div data-design-id="safety-summary-header" className="flex items-center gap-3">
-        <div className={cn(
-          "w-14 h-14 rounded-xl flex items-center justify-center",
-          summary.overallStatus === 'safe' ? 'bg-emerald-500' :
-          summary.overallStatus === 'unsafe' ? 'bg-red-500' : 'bg-amber-500'
-        )}>
+      <div
+        data-design-id="safety-summary-header"
+        className="flex items-center gap-3"
+      >
+        <div
+          className={cn(
+            "w-14 h-14 rounded-xl flex items-center justify-center",
+            summary.overallStatus === "safe"
+              ? "bg-emerald-500"
+              : summary.overallStatus === "unsafe"
+                ? "bg-red-500"
+                : "bg-amber-500",
+          )}
+        >
           <StatusIcon className="w-7 h-7 text-white" />
         </div>
         <div>
-          <h3 data-design-id="safety-summary-title" className={cn("text-lg font-bold", config.color)}>
+          <h3
+            data-design-id="safety-summary-title"
+            className={cn("text-lg font-bold", config.color)}
+          >
             {config.label}
           </h3>
-          <p data-design-id="safety-summary-subtitle" className="text-sm text-muted-foreground">
+          <p
+            data-design-id="safety-summary-subtitle"
+            className="text-sm text-muted-foreground"
+          >
             {summary.totalIngredients} ingredients analyzed
           </p>
         </div>
@@ -118,18 +148,27 @@ export function SafetySummary({ summary, compact = false }: SafetySummaryProps) 
           />
         </div>
 
-        <div data-design-id="safety-summary-legend" className="flex justify-between text-xs">
+        <div
+          data-design-id="safety-summary-legend"
+          className="flex justify-between text-xs"
+        >
           <div className="flex items-center gap-1.5">
             <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-            <span>{summary.safeCount} Safe ({summary.safePercentage}%)</span>
+            <span>
+              {summary.safeCount} Safe ({summary.safePercentage}%)
+            </span>
           </div>
           <div className="flex items-center gap-1.5">
             <HelpCircle className="w-3.5 h-3.5 text-amber-500" />
-            <span>{summary.unknownCount} Unknown ({summary.unknownPercentage}%)</span>
+            <span>
+              {summary.unknownCount} Unknown ({summary.unknownPercentage}%)
+            </span>
           </div>
           <div className="flex items-center gap-1.5">
             <XCircle className="w-3.5 h-3.5 text-red-500" />
-            <span>{summary.unsafeCount} Unsafe ({summary.unsafePercentage}%)</span>
+            <span>
+              {summary.unsafeCount} Unsafe ({summary.unsafePercentage}%)
+            </span>
           </div>
         </div>
       </div>

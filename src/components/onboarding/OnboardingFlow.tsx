@@ -1,10 +1,17 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ScanBarcode, Shield, AlertTriangle, Sparkles, ChevronRight, ChevronLeft } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { useAppStore } from '@/lib/store';
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  ScanBarcode,
+  Shield,
+  AlertTriangle,
+  Sparkles,
+  ChevronRight,
+  ChevronLeft,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useAppStore } from "@/lib/store";
 
 interface OnboardingStep {
   id: string;
@@ -17,43 +24,47 @@ interface OnboardingStep {
 
 const steps: OnboardingStep[] = [
   {
-    id: 'welcome',
-    title: 'Welcome to MTHFR Scanner',
-    description: 'Your personal guide to finding foods that support healthy methylation. Scan products and get instant safety analysis.',
+    id: "welcome",
+    title: "Welcome to MTHFR Scanner",
+    description:
+      "Your personal guide to finding foods that support healthy methylation. Scan products and get instant safety analysis.",
     icon: Sparkles,
-    iconBg: 'bg-gradient-to-br from-emerald-400 to-teal-500',
-    iconColor: 'text-white',
+    iconBg: "bg-gradient-to-br from-emerald-400 to-teal-500",
+    iconColor: "text-white",
   },
   {
-    id: 'scan',
-    title: 'Scan or Enter Products',
-    description: 'Use your camera to scan barcodes or manually enter product information. We\'ll look up ingredients from trusted databases.',
+    id: "scan",
+    title: "Scan or Enter Products",
+    description:
+      "Use your camera to scan barcodes or manually enter product information. We'll look up ingredients from trusted databases.",
     icon: ScanBarcode,
-    iconBg: 'bg-gradient-to-br from-blue-400 to-indigo-500',
-    iconColor: 'text-white',
+    iconBg: "bg-gradient-to-br from-blue-400 to-indigo-500",
+    iconColor: "text-white",
   },
   {
-    id: 'analyze',
-    title: 'MTHFR Safety Analysis',
-    description: 'Each ingredient is evaluated against MTHFR-safe criteria. We identify synthetic vitamins, additives, and other problematic components.',
+    id: "analyze",
+    title: "MTHFR Safety Analysis",
+    description:
+      "Each ingredient is evaluated against MTHFR-safe criteria. We identify synthetic vitamins, additives, and other problematic components.",
     icon: Shield,
-    iconBg: 'bg-gradient-to-br from-purple-400 to-pink-500',
-    iconColor: 'text-white',
+    iconBg: "bg-gradient-to-br from-purple-400 to-pink-500",
+    iconColor: "text-white",
   },
   {
-    id: 'masking',
-    title: 'Detect Hidden Ingredients',
-    description: 'We flag vague terms like "natural flavors" that may mask hazardous ingredients, helping you make informed decisions.',
+    id: "masking",
+    title: "Detect Hidden Ingredients",
+    description:
+      'We flag vague terms like "natural flavors" that may mask hazardous ingredients, helping you make informed decisions.',
     icon: AlertTriangle,
-    iconBg: 'bg-gradient-to-br from-amber-400 to-orange-500',
-    iconColor: 'text-white',
+    iconBg: "bg-gradient-to-br from-amber-400 to-orange-500",
+    iconColor: "text-white",
   },
 ];
 
 export function OnboardingFlow() {
   const [currentStep, setCurrentStep] = useState(0);
   const { completeOnboarding } = useAppStore();
-  
+
   const step = steps[currentStep];
   const isLastStep = currentStep === steps.length - 1;
   const Icon = step.icon;
@@ -62,13 +73,13 @@ export function OnboardingFlow() {
     if (isLastStep) {
       completeOnboarding();
     } else {
-      setCurrentStep(prev => prev + 1);
+      setCurrentStep((prev) => prev + 1);
     }
   };
 
   const handlePrev = () => {
     if (currentStep > 0) {
-      setCurrentStep(prev => prev - 1);
+      setCurrentStep((prev) => prev - 1);
     }
   };
 
@@ -77,7 +88,7 @@ export function OnboardingFlow() {
   };
 
   return (
-    <div 
+    <div
       data-design-id="onboarding-flow"
       className="fixed inset-0 bg-background z-50 flex flex-col"
     >
@@ -113,14 +124,14 @@ export function OnboardingFlow() {
               <Icon className={`w-14 h-14 ${step.iconColor}`} />
             </motion.div>
 
-            <h1 
+            <h1
               data-design-id={`onboarding-title-${step.id}`}
               className="text-2xl font-bold mb-4"
             >
               {step.title}
             </h1>
-            
-            <p 
+
+            <p
               data-design-id={`onboarding-desc-${step.id}`}
               className="text-muted-foreground leading-relaxed"
             >
@@ -130,17 +141,20 @@ export function OnboardingFlow() {
         </AnimatePresence>
       </div>
 
-      <div data-design-id="onboarding-progress" className="flex justify-center gap-2 mb-8">
+      <div
+        data-design-id="onboarding-progress"
+        className="flex justify-center gap-2 mb-8"
+      >
         {steps.map((_, index) => (
           <motion.div
             key={index}
             data-design-id={`onboarding-dot-${index}`}
             className={`h-2 rounded-full transition-all duration-300 ${
-              index === currentStep 
-                ? 'w-8 bg-primary' 
-                : index < currentStep 
-                  ? 'w-2 bg-primary/50' 
-                  : 'w-2 bg-muted'
+              index === currentStep
+                ? "w-8 bg-primary"
+                : index < currentStep
+                  ? "w-2 bg-primary/50"
+                  : "w-2 bg-muted"
             }`}
           />
         ))}
@@ -159,12 +173,12 @@ export function OnboardingFlow() {
             Back
           </Button>
         )}
-        
+
         <Button
           data-design-id="onboarding-next"
           size="lg"
           onClick={handleNext}
-          className={`${currentStep === 0 ? 'w-full' : 'flex-1'}`}
+          className={`${currentStep === 0 ? "w-full" : "flex-1"}`}
         >
           {isLastStep ? (
             <>

@@ -1,16 +1,16 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useAppStore } from '@/lib/store';
-import { initializeServices } from '@/lib/services/product-service';
-import { BottomNav } from '@/components/navigation/BottomNav';
-import { OnboardingFlow } from '@/components/onboarding/OnboardingFlow';
-import { HomeScreen } from '@/components/screens/HomeScreen';
-import { ScanScreen } from '@/components/screens/ScanScreen';
-import { HistoryScreen } from '@/components/screens/HistoryScreen';
-import { SettingsScreen } from '@/components/screens/SettingsScreen';
-import { Loader2, Shield } from 'lucide-react';
+import { useEffect, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { useAppStore } from "@/lib/store";
+import { initializeServices } from "@/lib/services/product-service";
+import { BottomNav } from "@/components/navigation/BottomNav";
+import { OnboardingFlow } from "@/components/onboarding/OnboardingFlow";
+import { HomeScreen } from "@/components/screens/HomeScreen";
+import { ScanScreen } from "@/components/screens/ScanScreen";
+import { HistoryScreen } from "@/components/screens/HistoryScreen";
+import { SettingsScreen } from "@/components/screens/SettingsScreen";
+import { Loader2, Shield } from "lucide-react";
 
 export function AppShell() {
   const { activeTab, hasCompletedOnboarding } = useAppStore();
@@ -21,18 +21,18 @@ export function AppShell() {
       try {
         await initializeServices();
       } catch (error) {
-        console.error('Failed to initialize services:', error);
+        console.error("Failed to initialize services:", error);
       } finally {
         setIsInitializing(false);
       }
     };
-    
+
     init();
   }, []);
 
   if (isInitializing) {
     return (
-      <div 
+      <div
         data-design-id="loading-screen"
         className="fixed inset-0 flex flex-col items-center justify-center bg-background"
       >
@@ -42,13 +42,15 @@ export function AppShell() {
           transition={{ duration: 0.5 }}
           className="flex flex-col items-center"
         >
-          <div 
+          <div
             data-design-id="loading-icon"
             className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary to-emerald-600 flex items-center justify-center mb-6 shadow-xl shadow-primary/30"
           >
             <Shield className="w-10 h-10 text-white" />
           </div>
-          <h1 data-design-id="loading-title" className="text-xl font-bold mb-2">MTHFR Scanner</h1>
+          <h1 data-design-id="loading-title" className="text-xl font-bold mb-2">
+            MTHFR Scanner
+          </h1>
           <div className="flex items-center gap-2 text-muted-foreground">
             <Loader2 className="w-4 h-4 animate-spin" />
             <span data-design-id="loading-text">Loading...</span>
@@ -69,10 +71,13 @@ export function AppShell() {
   };
 
   return (
-    <div data-design-id="app-shell" className="fixed inset-0 flex flex-col bg-background">
+    <div
+      data-design-id="app-shell"
+      className="fixed inset-0 flex flex-col bg-background"
+    >
       <main data-design-id="main-content" className="flex-1 overflow-hidden">
         <AnimatePresence mode="wait">
-          {activeTab === 'home' && (
+          {activeTab === "home" && (
             <motion.div
               key="home"
               variants={screenVariants}
@@ -85,8 +90,8 @@ export function AppShell() {
               <HomeScreen />
             </motion.div>
           )}
-          
-          {activeTab === 'scan' && (
+
+          {activeTab === "scan" && (
             <motion.div
               key="scan"
               variants={screenVariants}
@@ -99,8 +104,8 @@ export function AppShell() {
               <ScanScreen />
             </motion.div>
           )}
-          
-          {activeTab === 'history' && (
+
+          {activeTab === "history" && (
             <motion.div
               key="history"
               variants={screenVariants}
@@ -113,8 +118,8 @@ export function AppShell() {
               <HistoryScreen />
             </motion.div>
           )}
-          
-          {activeTab === 'settings' && (
+
+          {activeTab === "settings" && (
             <motion.div
               key="settings"
               variants={screenVariants}
@@ -129,7 +134,7 @@ export function AppShell() {
           )}
         </AnimatePresence>
       </main>
-      
+
       <BottomNav />
     </div>
   );

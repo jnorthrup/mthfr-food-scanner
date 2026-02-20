@@ -1,6 +1,6 @@
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-import type { Product, UserConsent, ConsentType } from '@/types';
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
+import type { Product, UserConsent, ConsentType } from "@/types";
 
 interface AppStore {
   currentProduct: Product | null;
@@ -10,7 +10,7 @@ interface AppStore {
   isLoading: boolean;
   error: string | null;
   hasCompletedOnboarding: boolean;
-  activeTab: 'home' | 'scan' | 'history' | 'settings';
+  activeTab: "home" | "scan" | "history" | "settings";
 
   setCurrentProduct: (product: Product | null) => void;
   addToHistory: (product: Product) => void;
@@ -19,15 +19,19 @@ interface AppStore {
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
   completeOnboarding: () => void;
-  setActiveTab: (tab: 'home' | 'scan' | 'history' | 'settings') => void;
+  setActiveTab: (tab: "home" | "scan" | "history" | "settings") => void;
   clearHistory: () => void;
 }
 
 const defaultConsents: Record<ConsentType, UserConsent> = {
-  location: { consentType: 'location', granted: false, version: 1 },
-  photo: { consentType: 'photo', granted: false, version: 1 },
-  review: { consentType: 'review', granted: false, version: 1 },
-  data_contribution: { consentType: 'data_contribution', granted: false, version: 1 },
+  location: { consentType: "location", granted: false, version: 1 },
+  photo: { consentType: "photo", granted: false, version: 1 },
+  review: { consentType: "review", granted: false, version: 1 },
+  data_contribution: {
+    consentType: "data_contribution",
+    granted: false,
+    version: 1,
+  },
 };
 
 export const useAppStore = create<AppStore>()(
@@ -40,34 +44,42 @@ export const useAppStore = create<AppStore>()(
       isLoading: false,
       error: null,
       hasCompletedOnboarding: false,
-      activeTab: 'home',
+      activeTab: "home",
 
       setCurrentProduct: (product) => set({ currentProduct: product }),
 
       addToHistory: (product) => {
         const history = get().scanHistory;
-        const existingIndex = history.findIndex(p => p.upc === product.upc);
-        
+        const existingIndex = history.findIndex((p) => p.upc === product.upc);
+
         if (existingIndex >= 0) {
           const updatedHistory = [...history];
-          updatedHistory[existingIndex] = { ...product, lastScannedAt: new Date() };
+          updatedHistory[existingIndex] = {
+            ...product,
+            lastScannedAt: new Date(),
+          };
           set({ scanHistory: updatedHistory });
         } else {
-          set({ scanHistory: [{ ...product, lastScannedAt: new Date() }, ...history].slice(0, 100) });
+          set({
+            scanHistory: [
+              { ...product, lastScannedAt: new Date() },
+              ...history,
+            ].slice(0, 100),
+          });
         }
       },
 
       toggleFavorite: (productId) => {
         const history = get().scanHistory;
         const favorites = get().favorites;
-        const product = history.find(p => p.id === productId);
-        
+        const product = history.find((p) => p.id === productId);
+
         if (!product) return;
-        
-        const isFavorite = favorites.some(f => f.id === productId);
-        
+
+        const isFavorite = favorites.some((f) => f.id === productId);
+
         if (isFavorite) {
-          set({ favorites: favorites.filter(f => f.id !== productId) });
+          set({ favorites: favorites.filter((f) => f.id !== productId) });
         } else {
           set({ favorites: [...favorites, { ...product, isFavorite: true }] });
         }
@@ -95,13 +107,13 @@ export const useAppStore = create<AppStore>()(
       clearHistory: () => set({ scanHistory: [] }),
     }),
     {
-      name: 'mthfr-scanner-storage',
+      name: "mthfr-scanner-storage",
       partialize: (state) => ({
         scanHistory: state.scanHistory,
         favorites: state.favorites,
         consents: state.consents,
         hasCompletedOnboarding: state.hasCompletedOnboarding,
       }),
-    }
-  )
+    },
+  ),
 );

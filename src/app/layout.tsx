@@ -5,7 +5,8 @@ import { Toaster } from "@/components/ui/sonner";
 
 export const metadata: Metadata = {
   title: "MTHFR Food Scanner",
-  description: "Scan food products and evaluate ingredient safety for MTHFR methylation health. Identify unsafe ingredients, masking terms, and get personalized safety recommendations.",
+  description:
+    "Scan food products and evaluate ingredient safety for MTHFR methylation health. Identify unsafe ingredients, masking terms, and get personalized safety recommendations.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
@@ -44,10 +45,19 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
-        <script data-design-ignore="true" dangerouslySetInnerHTML={{
-          __html: `(function() {
+        <link
+          rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossOrigin="anonymous"
+        />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
+          rel="stylesheet"
+        />
+        <script
+          data-design-ignore="true"
+          dangerouslySetInnerHTML={{
+            __html: `(function() {
             if (window === window.parent || window.__DESIGN_NAV_REPORTER__) return;
             window.__DESIGN_NAV_REPORTER__ = true;
             function report() {
@@ -60,8 +70,9 @@ export default function RootLayout({
             window.addEventListener('popstate', report);
             window.addEventListener('hashchange', report);
             window.addEventListener('load', report);
-          })();`
-        }} />
+          })();`,
+          }}
+        />
       </head>
       <body suppressHydrationWarning className="antialiased min-h-screen">
         <ClientBody>{children}</ClientBody>

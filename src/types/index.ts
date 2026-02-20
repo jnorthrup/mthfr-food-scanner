@@ -1,7 +1,12 @@
-export type SafetyStatus = 'safe' | 'unsafe' | 'unknown';
-export type RiskLevel = 'high' | 'medium' | 'low';
-export type SourceProvenance = 'api' | 'ocr' | 'review' | 'manual' | 'community';
-export type ConsentType = 'location' | 'photo' | 'review' | 'data_contribution';
+export type SafetyStatus = "safe" | "unsafe" | "unknown";
+export type RiskLevel = "high" | "medium" | "low";
+export type SourceProvenance =
+  | "api"
+  | "ocr"
+  | "review"
+  | "manual"
+  | "community";
+export type ConsentType = "location" | "photo" | "review" | "data_contribution";
 
 export interface Product {
   id?: number;
