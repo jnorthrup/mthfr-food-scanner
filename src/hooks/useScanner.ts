@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import {
   BrowserMultiFormatReader,
-  BarcodeFormat,
+  type BarcodeFormat,
   DecodeHintType,
 } from "@zxing/library";
 
@@ -38,19 +38,11 @@ export function useScanner(options: UseScannerOptions = {}) {
 
     try {
       const hints = new Map();
-      hints.set(DecodeHintType.POSSIBLE_FORMATS, [
-        BarcodeFormat.UPC_A,
-        BarcodeFormat.UPC_E,
-        BarcodeFormat.EAN_13,
-        BarcodeFormat.CODE_128,
-        ...(options.formats || []),
-      ]);
-      // Try harder helps with blurry barcodes, but we also assume GS1 for retail products
       hints.set(DecodeHintType.TRY_HARDER, true);
-      hints.set(DecodeHintType.ASSUME_GS1, true);
 
-      // Initialize with a faster scan interval (300ms instead of 500ms default)
-      const reader = new BrowserMultiFormatReader(hints, 300);
+      // Initialize reader without strict FORMAT limitations, as this often
+      // breaks UPC-A/UPC-E parsing. Rely on default internal formats.
+      const reader = new BrowserMultiFormatReader(hints);
       readerRef.current = reader;
 
       let initialStream: MediaStream | null = null;
@@ -66,12 +58,12 @@ export function useScanner(options: UseScannerOptions = {}) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const constraints: any = {
           video: {
-            facingMode: 'environment',
+            facingMode: "environment",
             width: { ideal: 1920, min: 1280 },
             height: { ideal: 1080, min: 720 },
             aspectRatio: { ideal: 16 / 9 },
-            advanced: [{ focusMode: "continuous" }]
-          }
+            advanced: [{ focusMode: "continuous" }],
+          },
         };
         initialStream = await navigator.mediaDevices.getUserMedia(constraints);
       } catch (err) {
