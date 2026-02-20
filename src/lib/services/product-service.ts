@@ -113,11 +113,13 @@ export async function processProductFromData(
     const id = await db.products.add(product as Product);
     const savedProduct = { ...product, id } as Product;
     
-    await db.scanHistory.add({
-      productId: id,
-      scannedAt: new Date(),
-      upc,
-    });
+    if (id !== undefined) {
+      await db.scanHistory.add({
+        productId: id as number,
+        scannedAt: new Date(),
+        upc,
+      });
+    }
     
     return {
       success: true,
@@ -160,10 +162,12 @@ export async function updateProductIngredients(
     const classifiedIngredients = classifyIngredientsList(normalizedIngredients, source);
     const safety = calculateProductSafety(classifiedIngredients);
     
-    await db.products.update(productId, {
-      ingredients: classifiedIngredients,
+    const updateData = {
+      ingredients: JSON.parse(JSON.stringify(classifiedIngredients)),
       updatedAt: new Date(),
-    });
+    };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (db.products.update as any)(productId, updateData);
     
     const updatedProduct = await db.products.get(productId);
     
@@ -217,7 +221,8 @@ export async function toggleProductFavorite(productId: number): Promise<boolean>
   if (!product) return false;
   
   const newFavoriteStatus = !product.isFavorite;
-  await db.products.update(productId, { isFavorite: newFavoriteStatus });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  await (db.products.update as any)(productId, { isFavorite: newFavoriteStatus });
   
   return newFavoriteStatus;
 }

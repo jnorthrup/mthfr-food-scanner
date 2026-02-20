@@ -3,7 +3,7 @@ import { db } from '@/lib/db';
 import type { NormalizationResult, CanonicalIngredient } from '@/types';
 
 let fuseIndex: Fuse<CanonicalIngredient> | null = null;
-let ingredientCache: Map<string, CanonicalIngredient> = new Map();
+const ingredientCache: Map<string, CanonicalIngredient> = new Map();
 
 export async function initializeNormalizer(): Promise<void> {
   const ingredients = await db.canonicalIngredients.toArray();

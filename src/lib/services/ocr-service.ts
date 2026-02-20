@@ -53,8 +53,8 @@ export async function performOCR(imageSource: File | Blob | string): Promise<OCR
 
 function extractIngredientsFromOCR(text: string): string[] {
   const ingredientPatterns = [
-    /ingredients?[:\s]*(.+?)(?:\.|nutrition|allergen|contains|manufactured|distributed|$)/is,
-    /contains?[:\s]*(.+?)(?:\.|nutrition|allergen|manufactured|distributed|$)/is,
+    /ingredients?[:\s]*([\s\S]+?)(?:\.|nutrition|allergen|contains|manufactured|distributed|$)/i,
+    /contains?[:\s]*([\s\S]+?)(?:\.|nutrition|allergen|manufactured|distributed|$)/i,
   ];
   
   for (const pattern of ingredientPatterns) {

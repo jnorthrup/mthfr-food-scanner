@@ -191,7 +191,7 @@ export function BarcodeScanner({ onScan, onClose, isActive = true }: BarcodeScan
                     }}
                     transition={{
                       duration: 2,
-                      repeat: Infinity,
+                      repeat: Number.POSITIVE_INFINITY,
                       ease: "easeInOut",
                     }}
                   />

@@ -1,0 +1,412 @@
+openapi: 3.0.3
+info:
+  title: MTHFR Food Scanner API
+  description: |
+    API for the MTHFR Food Scanner mobile PWA application.
+    This specification defines the external API integrations and internal API routes
+    for product lookup, ingredient analysis, and user data management.
+  version: 1.0.0
+  contact:
+    name: MTHFR Food Scanner Support
+
+servers:
+  - url: https://world.openfoodfacts.org/api/v2
+    description: Open Food Facts API (Primary product database)
+  - url: https://api.upcitemdb.com/prod/trial
+    description: UPC Item Database (Fallback product database)
+
+paths:
+  /product/{barcode}.json:
+    get:
+      operationId: getProductByBarcode
+      summary: Look up product by barcode
+      description: Retrieves product information including ingredients from Open Food Facts
+      tags:
+        - Products
+      parameters:
+        - name: barcode
+          in: path
+          required: true
+          description: UPC/EAN barcode (8-14 digits)
+          schema:
+            type: string
+            pattern: '^\d{8,14}$'
+            example: '012345678905'
+      responses:
+        '200':
+          description: Product found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenFoodFactsResponse'
+        '404':
+          description: Product not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: integer
+                    example: 0
+                  status_verbose:
+                    type: string
+                    example: "product not found"
+
+  /lookup:
+    get:
+      operationId: lookupUPC
+      summary: Look up product by UPC (UPC Item DB)
+      description: Fallback product lookup using UPC Item Database
+      tags:
+        - Products
+      parameters:
+        - name: upc
+          in: query
+          required: true
+          description: UPC barcode
+          schema:
+            type: string
+            example: '012345678905'
+      responses:
+        '200':
+          description: Product lookup result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UPCItemDBResponse'
+
+components:
+  schemas:
+    OpenFoodFactsResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          description: 1 if product found, 0 otherwise
+          example: 1
+        product:
+          $ref: '#/components/schemas/OpenFoodFactsProduct'
+
+    OpenFoodFactsProduct:
+      type: object
+      properties:
+        code:
+          type: string
+          description: Product barcode
+          example: '012345678905'
+        product_name:
+          type: string
+          description: Product name
+          example: 'Organic Whole Wheat Bread'
+        product_name_en:
+          type: string
+          description: Product name in English
+        brands:
+          type: string
+          description: Brand name(s)
+          example: "Nature's Own"
+        ingredients_text:
+          type: string
+          description: Full ingredient list as text
+          example: 'Whole Wheat Flour, Water, Sugar, Yeast, Salt'
+        ingredients_text_en:
+          type: string
+          description: Ingredient list in English
+        image_front_url:
+          type: string
+          format: uri
+          description: URL of product front image
+        image_url:
+          type: string
+          format: uri
+          description: URL of product image
+        categories:
+          type: string
+          description: Product categories
+        nutriments:
+          type: object
+          description: Nutritional information
+
+    UPCItemDBResponse:
+      type: object
+      properties:
+        code:
+          type: string
+          example: 'OK'
+        total:
+          type: integer
+          example: 1
+        offset:
+          type: integer
+          example: 0
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/UPCItemDBItem'
+
+    UPCItemDBItem:
+      type: object
+      properties:
+        ean:
+          type: string
+          description: EAN/UPC code
+        title:
+          type: string
+          description: Product title
+        description:
+          type: string
+          description: Product description
+        brand:
+          type: string
+          description: Brand name
+        images:
+          type: array
+          items:
+            type: string
+            format: uri
+          description: Product image URLs
+
+    Product:
+      type: object
+      description: Internal product representation
+      required:
+        - upc
+        - name
+        - ingredients
+        - sourceProvenance
+      properties:
+        id:
+          type: integer
+          description: Local database ID
+        upc:
+          type: string
+          description: Product barcode
+        name:
+          type: string
+          description: Product name
+        brand:
+          type: string
+          description: Brand name
+        imageUrl:
+          type: string
+          format: uri
+          description: Product image URL
+        ingredients:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductIngredient'
+        sourceProvenance:
+          $ref: '#/components/schemas/SourceProvenance'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        isFavorite:
+          type: boolean
+        lastScannedAt:
+          type: string
+          format: date-time
+
+    ProductIngredient:
+      type: object
+      required:
+        - originalText
+        - canonicalName
+        - normalizedName
+        - safetyStatus
+        - sourceProvenance
+      properties:
+        originalText:
+          type: string
+          description: Original ingredient text from label
+        canonicalName:
+          type: string
+          description: Normalized canonical ingredient name
+        normalizedName:
+          type: string
+          description: Normalized text (lowercase, stripped)
+        confidence:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+          description: Confidence score for normalization match
+        safetyStatus:
+          $ref: '#/components/schemas/SafetyStatus'
+        safetyReason:
+          type: string
+          description: Explanation for safety classification
+        isMasking:
+          type: boolean
+          description: Whether this is a masking/vague ingredient
+        maskingReason:
+          type: string
+          description: Why this ingredient is flagged as masking
+        maskingRiskLevel:
+          $ref: '#/components/schemas/RiskLevel'
+        subIngredients:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductIngredient'
+        sourceProvenance:
+          $ref: '#/components/schemas/SourceProvenance'
+
+    ProductSafetySummary:
+      type: object
+      properties:
+        overallStatus:
+          $ref: '#/components/schemas/SafetyStatus'
+        safeCount:
+          type: integer
+        unsafeCount:
+          type: integer
+        unknownCount:
+          type: integer
+        safePercentage:
+          type: integer
+          minimum: 0
+          maximum: 100
+        unsafePercentage:
+          type: integer
+          minimum: 0
+          maximum: 100
+        unknownPercentage:
+          type: integer
+          minimum: 0
+          maximum: 100
+        unsafeIngredients:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductIngredient'
+        maskingIngredients:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductIngredient'
+        totalIngredients:
+          type: integer
+
+    SafetyStatus:
+      type: string
+      enum:
+        - safe
+        - unsafe
+        - unknown
+      description: |
+        MTHFR safety classification:
+        - safe: Supports or does not interfere with methylation
+        - unsafe: May interfere with methylation (e.g., synthetic folic acid)
+        - unknown: Insufficient data to classify
+
+    RiskLevel:
+      type: string
+      enum:
+        - high
+        - medium
+        - low
+      description: Risk level for masking ingredients
+
+    SourceProvenance:
+      type: string
+      enum:
+        - api
+        - ocr
+        - review
+        - manual
+        - community
+      description: |
+        Data source provenance:
+        - api: From product database API
+        - ocr: Extracted from photo via OCR
+        - review: Derived from product reviews
+        - manual: User manual entry
+        - community: Community contributed
+
+    UserConsent:
+      type: object
+      properties:
+        id:
+          type: integer
+        consentType:
+          $ref: '#/components/schemas/ConsentType'
+        granted:
+          type: boolean
+        grantedAt:
+          type: string
+          format: date-time
+        withdrawnAt:
+          type: string
+          format: date-time
+        version:
+          type: integer
+
+    ConsentType:
+      type: string
+      enum:
+        - location
+        - photo
+        - review
+        - data_contribution
+      description: |
+        Types of user consent:
+        - location: Access to device location
+        - photo: Photo upload and OCR analysis
+        - review: Access to product reviews
+        - data_contribution: Share data to improve database
+
+    CanonicalIngredient:
+      type: object
+      properties:
+        id:
+          type: integer
+        canonicalName:
+          type: string
+          description: Canonical/standard ingredient name
+        synonyms:
+          type: array
+          items:
+            type: string
+          description: Alternative names/spellings
+        safetyStatus:
+          $ref: '#/components/schemas/SafetyStatus'
+        safetyReason:
+          type: string
+        evidence:
+          type: string
+        category:
+          type: string
+
+    MaskingTerm:
+      type: object
+      properties:
+        id:
+          type: integer
+        term:
+          type: string
+          description: The masking term (e.g., "natural flavors")
+        riskLevel:
+          $ref: '#/components/schemas/RiskLevel'
+        reason:
+          type: string
+          description: Why this term is considered masking
+        verificationGuidance:
+          type: string
+          description: Guidance for verifying the actual ingredients
+
+    OCRResult:
+      type: object
+      properties:
+        text:
+          type: string
+          description: Raw extracted text
+        confidence:
+          type: number
+          format: float
+          description: OCR confidence score (0-100)
+        ingredients:
+          type: array
+          items:
+            type: string
+          description: Parsed ingredient list from OCR text

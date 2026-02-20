@@ -12,7 +12,7 @@ import type {
 
 let classificationRules: MTHFRClassificationRule[] = [];
 let maskingTerms: MaskingTerm[] = [];
-let canonicalIngredients: Map<string, CanonicalIngredient> = new Map();
+const canonicalIngredients: Map<string, CanonicalIngredient> = new Map();
 
 export async function initializeClassifier(): Promise<void> {
   classificationRules = await db.classificationRules.toArray();

@@ -50,16 +50,17 @@ export function useScanner(options: UseScannerOptions = {}) {
 
       setState(s => ({ ...s, isScanning: true, error: null, hasPermission: true }));
 
-      const devices = await BrowserMultiFormatReader.listVideoInputDevices();
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const videoDevices = devices.filter((d): d is MediaDeviceInfo => d.kind === 'videoinput');
       
-      const backCamera = devices.find(
-        device =>
+      const backCamera = videoDevices.find(
+        (device: MediaDeviceInfo) =>
           device.label.toLowerCase().includes('back') ||
           device.label.toLowerCase().includes('rear') ||
           device.label.toLowerCase().includes('environment')
       );
       
-      const deviceId = backCamera?.deviceId || devices[0]?.deviceId;
+      const deviceId = backCamera?.deviceId || videoDevices[0]?.deviceId;
 
       if (!deviceId) {
         throw new Error('No camera found');
