@@ -7,10 +7,13 @@ const withPWA = require('next-pwa')({
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'standalone',
-  distDir: process.env.NODE_ENV === 'production' 
+  output: process.env.GITHUB_PAGES === 'true' ? 'export' : 'standalone',
+  // Make sure asset paths are correct for GitHub pages 
+  basePath: process.env.GITHUB_PAGES === 'true' ? '/mthfr-food-scanner' : '',
+  assetPrefix: process.env.GITHUB_PAGES === 'true' ? '/mthfr-food-scanner/' : '',
+  distDir: process.env.NODE_ENV === 'production'
     ? (process.env.BUILD_DIR || '.next-build')
-    : '.next',  
+    : '.next',
   images: {
     unoptimized: true,
     domains: [
