@@ -148,7 +148,7 @@ export function useScanner(options: UseScannerOptions = {}) {
             const bisectionCtx = bisectionCanvas.getContext("2d");
 
             if (bisectionCtx) {
-              // Copy just the central bisected area
+              // Copy just the central horizontal bisected area
               bisectionCtx.drawImage(
                 processCanvas,
                 cropX,
@@ -162,21 +162,62 @@ export function useScanner(options: UseScannerOptions = {}) {
               );
 
               try {
-                // Attempt to decode the tight crop
+                // First pass: Attempt to decode the tight horizontal crop
                 const result = reader.decode(bisectionCanvas);
                 if (result) {
                   const code = result.getText();
                   setState((s) => ({ ...s, lastScannedCode: code }));
                   options.onScan?.(code);
                   lastDecodeTime = now;
+                  return; // Exit here on success
                 }
               } catch (err: any) {
-                // NotFoundException simply means no barcode yet
                 if (err.name !== "NotFoundException") {
-                  console.error("Frame decode error:", err);
+                  console.error("Horizontal decode error:", err);
                 }
-                lastDecodeTime = now; // Apply 250ms debounce on failure
               }
+
+              // Second pass: If horizontal failed, try a vertical bisection
+              // to handle rotated barcodes without the user turning their phone.
+              const verticalH = cropW; // Swap dimensions for vertical slice
+              const verticalW = cropH;
+              const verticalX = Math.floor((width - verticalW) / 2);
+              const verticalY = Math.floor((height - verticalH) / 2);
+
+              const verticalCanvas = document.createElement("canvas");
+              verticalCanvas.width = verticalW;
+              verticalCanvas.height = verticalH;
+              const verticalCtx = verticalCanvas.getContext("2d");
+
+              if (verticalCtx) {
+                verticalCtx.drawImage(
+                  processCanvas,
+                  verticalX,
+                  verticalY,
+                  verticalW,
+                  verticalH,
+                  0,
+                  0,
+                  verticalW,
+                  verticalH,
+                );
+
+                try {
+                  const verticalResult = reader.decode(verticalCanvas);
+                  if (verticalResult) {
+                    const code = verticalResult.getText();
+                    setState((s) => ({ ...s, lastScannedCode: code }));
+                    options.onScan?.(code);
+                  }
+                } catch (err: any) {
+                  if (err.name !== "NotFoundException") {
+                    console.error("Vertical decode error:", err);
+                  }
+                }
+              }
+
+              // Debounce regardless of whether vertical succeeded or failed
+              lastDecodeTime = now;
             }
           }
         }
