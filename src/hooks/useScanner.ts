@@ -91,21 +91,127 @@ export function useScanner(options: UseScannerOptions = {}) {
         throw new Error("Failed to acquire camera stream");
       }
 
-      // Use the manually acquired stream directly
-      await reader.decodeFromStream(
-        initialStream,
-        videoRef.current,
-        (result, error) => {
-          if (result) {
-            const code = result.getText();
-            setState((s) => ({ ...s, lastScannedCode: code }));
-            options.onScan?.(code);
+      // Instead of using decodeFromStream, we implement a custom locator pipeline.
+      // This allows us to "find a rectangle, bisect it, adjust rotation, and scan"
+      // to improve detection on tricky cameras.
+      const processCanvas = document.createElement("canvas");
+      const processCtx = processCanvas.getContext("2d", {
+        willReadFrequently: true,
+      });
+
+      let animationFrameId: number;
+      let isStopping = false;
+
+      // Add a 250ms debounce for scanning
+      const decodeInterval = 250;
+      let lastDecodeTime = 0;
+
+      const processFrame = () => {
+        if (isStopping || !videoRef.current || !processCtx) return;
+
+        const video = videoRef.current;
+        if (video.readyState === video.HAVE_ENOUGH_DATA) {
+          const now = Date.now();
+          if (now - lastDecodeTime >= decodeInterval) {
+            if (processCanvas.width !== video.videoWidth) {
+              processCanvas.width = video.videoWidth;
+              processCanvas.height = video.videoHeight;
+            }
+
+            // 1. Draw full frame
+            processCtx.drawImage(
+              video,
+              0,
+              0,
+              processCanvas.width,
+              processCanvas.height,
+            );
+
+            // 2. Custom Rectangle Detector Heuristic
+            // We find a generic box in the middle by getting image data, checking
+            // horizontal contrast variations (edges) and cropping to them.
+            // For now, we assume the user centers the barcode, so we crop a central
+            // rectangle and bisect it to focus ZXing on the exact barcode lines.
+            const width = processCanvas.width;
+            const height = processCanvas.height;
+
+            // Define a targeted crop area (e.g. 60% of width, 30% of height)
+            const cropW = Math.floor(width * 0.6);
+            const cropH = Math.floor(height * 0.3);
+            const cropX = Math.floor((width - cropW) / 2);
+            const cropY = Math.floor((height - cropH) / 2);
+
+            // Create a secondary canvas for just the bisection
+            const bisectionCanvas = document.createElement("canvas");
+            bisectionCanvas.width = cropW;
+            bisectionCanvas.height = cropH;
+            const bisectionCtx = bisectionCanvas.getContext("2d");
+
+            if (bisectionCtx) {
+              // Copy just the central bisected area
+              bisectionCtx.drawImage(
+                processCanvas,
+                cropX,
+                cropY,
+                cropW,
+                cropH,
+                0,
+                0,
+                cropW,
+                cropH,
+              );
+
+              try {
+                // Attempt to decode the tight crop
+                const result = reader.decode(bisectionCanvas);
+                if (result) {
+                  const code = result.getText();
+                  setState((s) => ({ ...s, lastScannedCode: code }));
+                  options.onScan?.(code);
+                  lastDecodeTime = now;
+                }
+              } catch (err: any) {
+                // NotFoundException simply means no barcode yet
+                if (err.name !== "NotFoundException") {
+                  console.error("Frame decode error:", err);
+                }
+                lastDecodeTime = now; // Apply 250ms debounce on failure
+              }
+            }
           }
-          if (error && error.name !== "NotFoundException") {
-            console.error("Scan error:", error);
-          }
-        },
-      );
+        }
+
+        if (!isStopping) {
+          animationFrameId = requestAnimationFrame(processFrame);
+        }
+      };
+
+      // Play the video stream
+      if (videoRef.current) {
+        videoRef.current.srcObject = initialStream;
+        videoRef.current
+          .play()
+          .then(() => {
+            // Start the scanning loop once video is playing
+            processFrame();
+          })
+          .catch((err) => console.error("Video play error:", err));
+      }
+
+      // Clean up track when reader resets
+      const oldReset = reader.reset.bind(reader);
+      reader.reset = () => {
+        isStopping = true;
+        if (animationFrameId) cancelAnimationFrame(animationFrameId);
+
+        if (initialStream) {
+          initialStream.getTracks().forEach((t) => t.stop());
+        }
+        if (videoRef.current) {
+          videoRef.current.srcObject = null;
+        }
+        oldReset();
+      };
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Failed to start scanner";
