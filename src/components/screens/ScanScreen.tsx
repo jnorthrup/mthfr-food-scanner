@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Loader2, PackageSearch, AlertCircle } from "lucide-react";
+import { ArrowLeft, Loader2, PackageSearch, AlertCircle, ScanLine } from "lucide-react";
 import { useAppStore } from "@/lib/store";
 import {
   processProductByUPC,
@@ -15,13 +15,15 @@ import { ManualEntryForm } from "@/components/product/ManualEntryForm";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import type { Product, ProductSafetySummary } from "@/types";
 
-type ScanMode = "scanner" | "loading" | "result" | "not-found" | "manual-entry";
+type ScanMode = "idle" | "loading" | "result" | "not-found" | "manual-entry";
 
 export function ScanScreen() {
-  const [mode, setMode] = useState<ScanMode>("scanner");
+  const [mode, setMode] = useState<ScanMode>("idle");
+  const [isScannerOpen, setIsScannerOpen] = useState(true);
   const [scannedProduct, setScannedProduct] = useState<Product | null>(null);
   const [safety, setSafety] = useState<ProductSafetySummary | null>(null);
   const [lastScannedUPC, setLastScannedUPC] = useState<string>("");
@@ -32,11 +34,13 @@ export function ScanScreen() {
 
   const handleScan = useCallback(
     async (code: string) => {
-      if (isProcessing || code === lastScannedUPC) return;
+      // Prevent rapid double scans from re-triggering while loading
+      if (isProcessing || (code === lastScannedUPC && isScannerOpen)) return;
 
       setIsProcessing(true);
       setLastScannedUPC(code);
       setMode("loading");
+      setIsScannerOpen(false); // Instantly dismiss overlay so loading shows in full screen
 
       try {
         const result = await processProductByUPC(code);
@@ -64,12 +68,14 @@ export function ScanScreen() {
       } catch (error) {
         console.error("Scan error:", error);
         toast.error("Failed to look up product");
-        setMode("scanner");
+        // Optionally reopen scanner on crash
+        setIsScannerOpen(true);
+        setMode("idle");
       } finally {
         setIsProcessing(false);
       }
     },
-    [isProcessing, lastScannedUPC, addToHistory],
+    [isProcessing, lastScannedUPC, addToHistory, isScannerOpen],
   );
 
   const handleManualSubmit = async (data: {
@@ -108,10 +114,11 @@ export function ScanScreen() {
   };
 
   const resetScanner = () => {
-    setMode("scanner");
+    setMode("idle");
     setScannedProduct(null);
     setSafety(null);
     setLastScannedUPC("");
+    setIsScannerOpen(true);
   };
 
   const viewProductDetails = () => {
@@ -124,25 +131,48 @@ export function ScanScreen() {
   return (
     <div
       data-design-id="scan-screen"
-      className="h-full flex flex-col bg-background"
+      className="h-full flex flex-col bg-background relative"
     >
+      {/* Scanner Modal Overlay */}
+      <Dialog open={isScannerOpen} onOpenChange={setIsScannerOpen}>
+        <DialogContent
+          className="p-0 border-none bg-black h-dvh w-screen max-w-none m-0 sm:rounded-none overflow-hidden [&>button]:hidden"
+        >
+          <DialogTitle className="sr-only">Barcode Scanner</DialogTitle>
+          <BarcodeScanner
+            onScan={handleScan}
+            isActive={isScannerOpen}
+            onClose={() => setIsScannerOpen(false)}
+          />
+        </DialogContent>
+      </Dialog>
+
+      {/* Main Base Layout (Scrolls Naturally!) */}
       <AnimatePresence mode="wait">
-        {mode === "scanner" && (
+        {mode === "idle" && !isScannerOpen && (
           <motion.div
-            key="scanner"
+            key="idle"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="flex-1"
+            className="flex-1 flex flex-col items-center justify-center text-center p-6"
           >
-            <BarcodeScanner onScan={handleScan} isActive={mode === "scanner"} />
+            <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mb-6">
+              <ScanLine className="w-10 h-10 text-primary" />
+            </div>
+            <h2 className="text-xl font-semibold mb-2">Scanner Paused</h2>
+            <p className="text-muted-foreground mb-8">
+              Tap below to reopen the camera and resume scanning products.
+            </p>
+            <Button size="lg" onClick={() => setIsScannerOpen(true)} className="gap-2">
+              <ScanLine className="w-5 h-5" /> Open Scanner
+            </Button>
           </motion.div>
         )}
 
         {mode === "loading" && (
           <motion.div
             key="loading"
-            data-design-id="scan-loading"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -151,22 +181,11 @@ export function ScanScreen() {
             <div className="w-20 h-20 rounded-2xl bg-primary/10 flex items-center justify-center mb-6">
               <Loader2 className="w-10 h-10 text-primary animate-spin" />
             </div>
-            <h2
-              data-design-id="loading-title"
-              className="text-xl font-semibold mb-2"
-            >
-              Looking up product...
-            </h2>
-            <p
-              data-design-id="loading-subtitle"
-              className="text-muted-foreground text-center"
-            >
+            <h2 className="text-xl font-semibold mb-2">Looking up product...</h2>
+            <p className="text-muted-foreground text-center">
               Searching product databases and analyzing ingredients
             </p>
-            <p
-              data-design-id="loading-upc"
-              className="font-mono text-sm mt-4 text-muted-foreground"
-            >
+            <p className="font-mono text-sm mt-4 text-muted-foreground">
               UPC: {lastScannedUPC}
             </p>
           </motion.div>
@@ -178,28 +197,15 @@ export function ScanScreen() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="flex-1 flex flex-col"
+            className="flex-1 flex flex-col h-full overflow-hidden"
           >
-            <div
-              data-design-id="result-header"
-              className="p-4 flex items-center gap-3 border-b"
-            >
-              <Button
-                data-design-id="result-back"
-                variant="ghost"
-                size="icon"
-                onClick={resetScanner}
-              >
+            <div className="p-4 flex items-center gap-3 border-b bg-background/80 backdrop-blur z-10 sticky top-0">
+              <Button variant="ghost" size="icon" onClick={() => setIsScannerOpen(true)}>
                 <ArrowLeft className="w-5 h-5" />
               </Button>
-              <h2 className="font-semibold flex-1">Scan Result</h2>
-              <Button
-                data-design-id="scan-another"
-                variant="outline"
-                size="sm"
-                onClick={resetScanner}
-              >
-                Scan Another
+              <h2 className="font-semibold flex-1 truncate">Scan Result</h2>
+              <Button variant="outline" size="sm" onClick={() => setIsScannerOpen(true)} className="gap-2">
+                <ScanLine className="w-4 h-4" /> Scan Another
               </Button>
             </div>
 
@@ -213,7 +219,6 @@ export function ScanScreen() {
                     }
                   }}
                 />
-
                 <IngredientList
                   ingredients={scannedProduct.ingredients}
                   showProvenance
@@ -226,91 +231,65 @@ export function ScanScreen() {
         {mode === "not-found" && (
           <motion.div
             key="not-found"
-            data-design-id="not-found-screen"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="flex-1 flex flex-col"
+            className="flex-1 flex flex-col h-full overflow-hidden"
           >
-            <div
-              data-design-id="not-found-header"
-              className="p-4 flex items-center gap-3 border-b"
-            >
-              <Button variant="ghost" size="icon" onClick={resetScanner}>
+            <div className="p-4 flex items-center gap-3 border-b bg-background/80 backdrop-blur z-10 sticky top-0">
+              <Button variant="ghost" size="icon" onClick={() => setIsScannerOpen(true)}>
                 <ArrowLeft className="w-5 h-5" />
               </Button>
-              <h2 className="font-semibold">Product Not Found</h2>
+              <h2 className="font-semibold flex-1">Not Found</h2>
             </div>
 
-            <div className="flex-1 flex flex-col items-center justify-center p-8">
-              <div
-                data-design-id="not-found-icon"
-                className="w-24 h-24 rounded-full bg-amber-100 dark:bg-amber-950/50 flex items-center justify-center mb-6"
-              >
-                <PackageSearch className="w-12 h-12 text-amber-600 dark:text-amber-400" />
-              </div>
+            <ScrollArea className="flex-1">
+              <div className="flex-1 flex flex-col items-center justify-center p-8 pb-24 min-h-[60vh]">
+                <div className="w-24 h-24 rounded-full bg-amber-100 dark:bg-amber-950/50 flex items-center justify-center mb-6">
+                  <PackageSearch className="w-12 h-12 text-amber-600 dark:text-amber-400" />
+                </div>
 
-              <h2
-                data-design-id="not-found-title"
-                className="text-xl font-semibold mb-2"
-              >
-                Product Not in Database
-              </h2>
-              <p
-                data-design-id="not-found-desc"
-                className="text-muted-foreground text-center mb-2"
-              >
-                We couldn't find this product in our databases.
-              </p>
-              <p
-                data-design-id="not-found-upc"
-                className="font-mono text-sm text-muted-foreground mb-6"
-              >
-                UPC: {lastScannedUPC}
-              </p>
+                <h2 className="text-xl font-semibold mb-2">Product Not in Database</h2>
+                <p className="text-muted-foreground text-center mb-2">
+                  We couldn't find this product in our databases.
+                </p>
+                <p className="font-mono text-sm text-muted-foreground mb-6">
+                  UPC: {lastScannedUPC}
+                </p>
 
-              <Alert data-design-id="not-found-alert" className="mb-6 max-w-sm">
-                <AlertCircle className="w-4 h-4" />
-                <AlertTitle>Help improve the database</AlertTitle>
-                <AlertDescription>
-                  You can add this product manually by entering its name and
-                  ingredient list.
-                </AlertDescription>
-              </Alert>
+                <Alert className="mb-6 max-w-sm">
+                  <AlertCircle className="w-4 h-4" />
+                  <AlertTitle>Help improve the database</AlertTitle>
+                  <AlertDescription>
+                    You can add this product manually by entering its name and
+                    ingredient list.
+                  </AlertDescription>
+                </Alert>
 
-              <div className="flex flex-col gap-3 w-full max-w-sm">
-                <Button
-                  data-design-id="google-search-btn"
-                  variant="secondary"
-                  onClick={() =>
-                    window.open(
-                      `https://www.google.com/search?q=UPC+${lastScannedUPC}`,
-                      "_blank",
-                    )
-                  }
-                  className="w-full"
-                >
-                  Search Web for UPC
-                </Button>
-                <div className="flex gap-3 w-full">
+                <div className="flex flex-col gap-3 w-full max-w-sm">
                   <Button
-                    data-design-id="try-again-btn"
-                    variant="outline"
-                    onClick={resetScanner}
-                    className="flex-1"
+                    variant="secondary"
+                    onClick={() =>
+                      window.open(
+                        `https://www.google.com/search?q=UPC+${lastScannedUPC}`,
+                        "_blank",
+                      )
+                    }
+                    className="w-full"
                   >
-                    Scan Again
+                    Search Web for UPC
                   </Button>
-                  <Button
-                    data-design-id="add-manually-btn"
-                    onClick={() => setMode("manual-entry")}
-                    className="flex-1"
-                  >
-                    Add Manually
-                  </Button>
+                  <div className="flex gap-3 w-full">
+                    <Button variant="outline" onClick={() => setIsScannerOpen(true)} className="flex-1">
+                      Scan Again
+                    </Button>
+                    <Button onClick={() => setMode("manual-entry")} className="flex-1">
+                      Add Manually
+                    </Button>
+                  </div>
                 </div>
               </div>
-            </div>
+            </ScrollArea>
           </motion.div>
         )}
 
@@ -320,13 +299,10 @@ export function ScanScreen() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="flex-1 flex flex-col"
+            className="flex-1 flex flex-col h-full overflow-hidden"
           >
-            <div
-              data-design-id="manual-header"
-              className="p-4 flex items-center gap-3 border-b"
-            >
-              <Button variant="ghost" size="icon" onClick={resetScanner}>
+            <div className="p-4 flex items-center gap-3 border-b bg-background/80 backdrop-blur z-10 sticky top-0">
+              <Button variant="ghost" size="icon" onClick={() => setMode("not-found")}>
                 <ArrowLeft className="w-5 h-5" />
               </Button>
               <h2 className="font-semibold">Manual Entry</h2>
@@ -337,7 +313,7 @@ export function ScanScreen() {
                 <ManualEntryForm
                   initialUPC={lastScannedUPC}
                   onSubmit={handleManualSubmit}
-                  onCancel={resetScanner}
+                  onCancel={() => setMode("not-found")}
                   isLoading={isProcessing}
                 />
               </div>
