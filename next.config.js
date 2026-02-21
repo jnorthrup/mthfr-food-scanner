@@ -1,13 +1,18 @@
+const isExport = process.env.NEXT_EXPORT === 'true';
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH || '';
+
 const withPWA = require('next-pwa')({
   dest: 'public',
-  disable: process.env.NODE_ENV === 'development',
+  disable: process.env.NODE_ENV === 'development' || isExport,
   register: true,
   skipWaiting: true,
 });
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'standalone',
+  output: isExport ? 'export' : 'standalone',
+  ...(isExport && basePath && { basePath }),
+  ...(isExport && { trailingSlash: true }),
   distDir: process.env.NODE_ENV === 'production' 
     ? (process.env.BUILD_DIR || '.next-build')
     : '.next',  
@@ -34,21 +39,23 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
-  async headers() {
-    if (process.env.NODE_ENV !== 'development') {
-      return [];
-    }
-    return [
-      {
-        source: '/:path*',
-        headers: [
-          { key: 'Access-Control-Allow-Origin', value: '*' },
-          { key: 'Access-Control-Allow-Methods', value: 'GET, POST, PUT, DELETE, OPTIONS' },
-          { key: 'Access-Control-Allow-Headers', value: '*' },
-        ],
-      },
-    ];
-  },
+  ...(!isExport && {
+    async headers() {
+      if (process.env.NODE_ENV !== 'development') {
+        return [];
+      }
+      return [
+        {
+          source: '/:path*',
+          headers: [
+            { key: 'Access-Control-Allow-Origin', value: '*' },
+            { key: 'Access-Control-Allow-Methods', value: 'GET, POST, PUT, DELETE, OPTIONS' },
+            { key: 'Access-Control-Allow-Headers', value: '*' },
+          ],
+        },
+      ];
+    },
+  }),
 };
 
 module.exports = withPWA(nextConfig);
