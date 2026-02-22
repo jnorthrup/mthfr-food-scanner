@@ -1,16 +1,17 @@
 import { db } from "@/lib/db";
+import { useAppStore } from "@/lib/store";
 import type {
   ProductIngredient,
   NormalizationResult,
   SafetyStatus,
   ProductSafetySummary,
   CanonicalIngredient,
-  MTHFRClassificationRule,
+  ClassificationRule,
   MaskingTerm,
   SourceProvenance,
 } from "@/types";
 
-let classificationRules: MTHFRClassificationRule[] = [];
+let classificationRules: ClassificationRule[] = [];
 let maskingTerms: MaskingTerm[] = [];
 const canonicalIngredients: Map<string, CanonicalIngredient> = new Map();
 
@@ -44,7 +45,12 @@ export function classifyIngredient(
     safetyStatus = knownIngredient.safetyStatus;
     safetyReason = knownIngredient.safetyReason;
   } else {
+    const { restrictionSettings } = useAppStore.getState();
+
     for (const rule of classificationRules) {
+      // Only apply rules for enabled profiles
+      if (!restrictionSettings[rule.profile]) continue;
+
       const pattern = new RegExp(rule.ingredientPattern, "i");
       if (pattern.test(originalText) || pattern.test(canonicalName)) {
         safetyStatus = rule.safetyStatus;
