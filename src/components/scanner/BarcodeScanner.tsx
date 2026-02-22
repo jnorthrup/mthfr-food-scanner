@@ -47,7 +47,7 @@ export function BarcodeScanner({
           qrbox: { width: 300, height: 150 },
           aspectRatio: 16 / 9,
           // Explictly optimize engine for UPC and EAN barcodes
-          formatsToSupport: formatsToSupport
+          formatsToSupport: formatsToSupport,
         },
         /* verbose= */ false,
       );

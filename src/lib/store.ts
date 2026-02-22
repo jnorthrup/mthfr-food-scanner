@@ -1,12 +1,18 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { Product, UserConsent, ConsentType } from "@/types";
+import type {
+  Product,
+  UserConsent,
+  ConsentType,
+  RestrictionProfileId,
+} from "@/types";
 
 interface AppStore {
   currentProduct: Product | null;
   scanHistory: Product[];
   favorites: Product[];
   consents: Record<ConsentType, UserConsent>;
+  restrictionSettings: Record<RestrictionProfileId, boolean>;
   isLoading: boolean;
   error: string | null;
   hasCompletedOnboarding: boolean;
@@ -16,6 +22,7 @@ interface AppStore {
   addToHistory: (product: Product) => void;
   toggleFavorite: (productId: number) => void;
   setConsent: (type: ConsentType, granted: boolean) => void;
+  toggleRestriction: (profileId: RestrictionProfileId) => void;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
   completeOnboarding: () => void;
@@ -34,6 +41,14 @@ const defaultConsents: Record<ConsentType, UserConsent> = {
   },
 };
 
+const defaultRestrictions: Record<RestrictionProfileId, boolean> = {
+  mthfr: true,
+  eu_standards: true,
+  genetic_mutations: true,
+  allergens: true,
+  additives: true,
+};
+
 export const useAppStore = create<AppStore>()(
   persist(
     (set, get) => ({
@@ -41,6 +56,7 @@ export const useAppStore = create<AppStore>()(
       scanHistory: [],
       favorites: [],
       consents: defaultConsents,
+      restrictionSettings: defaultRestrictions,
       isLoading: false,
       error: null,
       hasCompletedOnboarding: false,
@@ -100,6 +116,16 @@ export const useAppStore = create<AppStore>()(
         });
       },
 
+      toggleRestriction: (profileId) => {
+        const settings = get().restrictionSettings;
+        set({
+          restrictionSettings: {
+            ...settings,
+            [profileId]: !settings[profileId],
+          },
+        });
+      },
+
       setLoading: (loading) => set({ isLoading: loading }),
       setError: (error) => set({ error }),
       completeOnboarding: () => set({ hasCompletedOnboarding: true }),
@@ -112,6 +138,7 @@ export const useAppStore = create<AppStore>()(
         scanHistory: state.scanHistory,
         favorites: state.favorites,
         consents: state.consents,
+        restrictionSettings: state.restrictionSettings,
         hasCompletedOnboarding: state.hasCompletedOnboarding,
       }),
     },
