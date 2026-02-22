@@ -1,6 +1,6 @@
 const withPWA = require('next-pwa')({
   dest: 'public',
-  disable: process.env.NODE_ENV === 'development',
+  disable: process.env.NODE_ENV === 'development' || process.env.GITHUB_PAGES === 'true',
   register: true,
   skipWaiting: true,
 });
@@ -8,6 +8,7 @@ const withPWA = require('next-pwa')({
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: process.env.GITHUB_PAGES === 'true' ? 'export' : 'standalone',
+  trailingSlash: process.env.GITHUB_PAGES === 'true',
   // Make sure asset paths are correct for GitHub pages 
   basePath: process.env.GITHUB_PAGES === 'true' ? '/mthfr-food-scanner' : '',
   assetPrefix: process.env.GITHUB_PAGES === 'true' ? '/mthfr-food-scanner/' : '',
