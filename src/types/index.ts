@@ -8,6 +8,13 @@ export type SourceProvenance =
   | "community";
 export type ConsentType = "location" | "photo" | "review" | "data_contribution";
 
+export type RestrictionProfileId =
+  | "mthfr"
+  | "eu_standards"
+  | "genetic_mutations"
+  | "allergens"
+  | "additives";
+
 export interface Product {
   id?: number;
   upc: string;
@@ -54,12 +61,13 @@ export interface MaskingTerm {
   verificationGuidance: string;
 }
 
-export interface MTHFRClassificationRule {
+export interface ClassificationRule {
   id?: number;
   ingredientPattern: string;
   safetyStatus: SafetyStatus;
   reason: string;
   evidence?: string;
+  profile: RestrictionProfileId;
   version: number;
   createdAt: Date;
 }
