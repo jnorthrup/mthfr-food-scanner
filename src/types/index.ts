@@ -13,7 +13,17 @@ export type RestrictionProfileId =
   | "eu_standards"
   | "genetic_mutations"
   | "allergens"
-  | "additives";
+  | "additives"
+  | "allergy_soy"
+  | "allergy_wheat"
+  | "allergy_milk"
+  | "allergy_egg"
+  | "allergy_peanut"
+  | "allergy_treenuts"
+  | "allergy_fish"
+  | "allergy_shellfish"
+  | "allergy_sesame"
+  | "mutation_g6pd";
 
 export interface Product {
   id?: number;
@@ -131,4 +141,55 @@ export interface AppState {
   consents: UserConsent[];
   isLoading: boolean;
   error: string | null;
+  userMutations: UserMutation[];
+}
+
+export interface MutationDefinition {
+  id: string;
+  name: string;
+  gene: string;
+  commonVariants: MutationVariant[];
+  description: string;
+  category: MutationCategory;
+}
+
+export interface MutationVariant {
+  variant: string;
+  shorthand: string;
+  genotype: string;
+  impact: "normal" | "reduced" | "increased" | "absent";
+  frequency: string;
+}
+
+export type MutationCategory =
+  | "methylation"
+  | "detoxification"
+  | "nutrient_absorption"
+  | "enzyme_function"
+  | "immune"
+  | "other";
+
+export interface UserMutation {
+  id?: number;
+  mutationId: string;
+  variant: string;
+  genotype: string;
+  addedAt: Date;
+}
+
+export interface MutationContraindication {
+  mutationId: string;
+  ingredientPattern: string;
+  severity: "avoid" | "limit" | "caution";
+  reason: string;
+  evidence: string;
+  alternative?: string;
+}
+
+export interface IngredientContraindication {
+  ingredient: string;
+  contraindicatedFor: string[];
+  severity: "avoid" | "limit" | "caution";
+  reason: string;
+  alternatives?: string[];
 }

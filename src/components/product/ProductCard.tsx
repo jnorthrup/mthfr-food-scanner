@@ -112,24 +112,36 @@ export function ProductCard({
       data-design-id={`product-card-${product.upc}`}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-card rounded-2xl border border-border overflow-hidden"
+      whileHover={{ y: -5, shadow: "0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)" }}
+      className="bg-card rounded-3xl border border-border/50 overflow-hidden shadow-sm transition-shadow duration-300"
     >
       <div
         data-design-id={`product-header-${product.upc}`}
         className="relative"
       >
         {product.imageUrl ? (
-          <div className="aspect-video bg-muted">
-            <Image
-              src={product.imageUrl}
-              alt={product.name}
-              fill
-              className="object-contain"
-            />
+          <div className="aspect-video bg-muted relative overflow-hidden">
+            <motion.div
+              className="w-full h-full"
+              whileHover={{ scale: 1.05 }}
+              transition={{ duration: 0.6, ease: [0.33, 1, 0.68, 1] }}
+            >
+              <Image
+                src={product.imageUrl}
+                alt={product.name}
+                fill
+                className="object-contain"
+              />
+            </motion.div>
           </div>
         ) : (
-          <div className="aspect-video bg-gradient-to-br from-muted to-muted/50 flex items-center justify-center">
-            <span className="text-6xl">📦</span>
+          <div className="aspect-video bg-gradient-to-br from-muted/80 to-muted/20 flex items-center justify-center">
+            <motion.span
+              className="text-6xl"
+              whileHover={{ scale: 1.2, rotate: 5 }}
+            >
+              📦
+            </motion.span>
           </div>
         )}
 
@@ -142,13 +154,13 @@ export function ProductCard({
               e.stopPropagation();
               onToggleFavorite();
             }}
-            className="absolute top-3 right-3 glass bg-white/80 dark:bg-black/50 hover:bg-white dark:hover:bg-black/70"
+            className="absolute top-4 right-4 glass-dark bg-white/40 dark:bg-black/40 hover:bg-white/60 dark:hover:bg-black/60 border border-white/20 dark:border-white/10 rounded-2xl backdrop-blur-md shadow-lg"
           >
             <Heart
               className={cn(
-                "w-5 h-5 transition-colors",
+                "w-5 h-5 transition-transform duration-300",
                 product.isFavorite
-                  ? "fill-red-500 text-red-500"
+                  ? "fill-red-500 text-red-500 scale-110"
                   : "text-muted-foreground",
               )}
             />
@@ -161,10 +173,12 @@ export function ProductCard({
         >
           <Badge
             variant="secondary"
-            className="glass bg-white/90 dark:bg-black/70"
+            className="glass bg-white/50 dark:bg-black/40 border border-white/20 dark:border-white/10 backdrop-blur-md shadow-sm py-1 px-3 rounded-full"
           >
-            <SourceIcon className="w-3 h-3 mr-1" />
-            {sourceLabels[product.sourceProvenance]}
+            <SourceIcon className="w-3 h-3 mr-1.5 text-primary" />
+            <span className="text-[10px] font-bold uppercase tracking-wider opacity-80">
+              {sourceLabels[product.sourceProvenance]}
+            </span>
           </Badge>
         </div>
       </div>

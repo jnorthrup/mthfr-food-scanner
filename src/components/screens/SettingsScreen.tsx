@@ -23,8 +23,10 @@ import {
   Beaker,
 } from "lucide-react";
 import { useAppStore } from "@/lib/store";
+import type { RestrictionProfileId } from "@/types";
 import { exportData, clearAllData } from "@/lib/db";
 import { ConsentManager } from "@/components/settings/ConsentManager";
+import { MutationInput } from "@/components/mutations/MutationInput";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -54,7 +56,7 @@ import {
 import { toast } from "sonner";
 
 export function SettingsScreen() {
-  const { clearHistory, scanHistory, restrictionSettings, toggleRestriction } =
+  const { clearHistory, scanHistory, restrictionSettings, toggleRestriction, userMutations, addUserMutation, removeUserMutation, clearUserMutations } =
     useAppStore();
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [showClearDialog, setShowClearDialog] = useState(false);
@@ -183,42 +185,97 @@ export function SettingsScreen() {
 
               <Separator />
 
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-purple-100 dark:bg-purple-900/30">
-                    <Stethoscope className="w-4 h-4 text-purple-600" />
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-purple-100 dark:bg-purple-900/30">
+                      <Stethoscope className="w-4 h-4 text-purple-600" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-sm">Genetic Mutations</p>
+                      <p className="text-xs text-muted-foreground">
+                        Overall mutation safety rules
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="font-medium text-sm">Genetic Mutations</p>
-                    <p className="text-xs text-muted-foreground">
-                      G6PD (Favism) & other variants
-                    </p>
-                  </div>
+                  <Switch
+                    checked={restrictionSettings.genetic_mutations}
+                    onCheckedChange={() => toggleRestriction("genetic_mutations")}
+                  />
                 </div>
-                <Switch
-                  checked={restrictionSettings.genetic_mutations}
-                  onCheckedChange={() => toggleRestriction("genetic_mutations")}
-                />
+                {restrictionSettings.genetic_mutations && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    className="pl-12 space-y-3"
+                  >
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm text-muted-foreground">
+                        G6PD Deficiency (Favism)
+                      </p>
+                      <Switch
+                        size="sm"
+                        checked={restrictionSettings.mutation_g6pd}
+                        onCheckedChange={() => toggleRestriction("mutation_g6pd")}
+                      />
+                    </div>
+                  </motion.div>
+                )}
               </div>
 
               <Separator />
 
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-orange-100 dark:bg-orange-900/30">
-                    <MilkOff className="w-4 h-4 text-orange-600" />
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-orange-100 dark:bg-orange-900/30">
+                      <MilkOff className="w-4 h-4 text-orange-600" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-sm">Common Allergens</p>
+                      <p className="text-xs text-muted-foreground">
+                        Overall allergen safety rules
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="font-medium text-sm">Common Allergens</p>
-                    <p className="text-xs text-muted-foreground">
-                      Soy, Wheat, Dairy, Nuts, etc.
-                    </p>
-                  </div>
+                  <Switch
+                    checked={restrictionSettings.allergens}
+                    onCheckedChange={() => toggleRestriction("allergens")}
+                  />
                 </div>
-                <Switch
-                  checked={restrictionSettings.allergens}
-                  onCheckedChange={() => toggleRestriction("allergens")}
-                />
+                {restrictionSettings.allergens && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    className="pl-12 grid grid-cols-1 gap-3"
+                  >
+                    {[
+                      { id: "allergy_soy", name: "Soy" },
+                      { id: "allergy_wheat", name: "Wheat / Gluten" },
+                      { id: "allergy_milk", name: "Dairy / Milk" },
+                      { id: "allergy_egg", name: "Egg" },
+                      { id: "allergy_peanut", name: "Peanut" },
+                      { id: "allergy_treenuts", name: "Tree Nuts" },
+                      { id: "allergy_fish", name: "Fish" },
+                      { id: "allergy_shellfish", name: "Shellfish" },
+                      { id: "allergy_sesame", name: "Sesame" },
+                    ].map((allergy) => (
+                      <div
+                        key={allergy.id}
+                        className="flex items-center justify-between"
+                      >
+                        <p className="text-sm text-muted-foreground">
+                          {allergy.name}
+                        </p>
+                        <Switch
+                          size="sm"
+                          checked={restrictionSettings[allergy.id as RestrictionProfileId]}
+                          onCheckedChange={() => toggleRestriction(allergy.id as RestrictionProfileId)}
+                        />
+                      </div>
+                    ))}
+                  </motion.div>
+                )}
               </div>
 
               <Separator />
@@ -240,6 +297,51 @@ export function SettingsScreen() {
                   onCheckedChange={() => toggleRestriction("additives")}
                 />
               </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.18 }}
+        >
+          <Card data-design-id="genetic-variants-card">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Dna className="w-4 h-4 text-violet-600" />
+                Your Genetic Variants
+              </CardTitle>
+              <CardDescription>
+                Enter your genetic test results for personalized food recommendations
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <MutationInput
+                userMutations={userMutations}
+                onAddMutation={(mutation) => {
+                  addUserMutation(mutation);
+                  const gene = mutation.mutationId.split("_")[0].toUpperCase();
+                  toast.success(`Added ${gene} variant`);
+                }}
+                onRemoveMutation={(id) => {
+                  removeUserMutation(id);
+                  toast.info("Variant removed");
+                }}
+              />
+              {userMutations.length > 0 && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="mt-4 w-full text-muted-foreground"
+                  onClick={() => {
+                    clearUserMutations();
+                    toast.success("All genetic variants cleared");
+                  }}
+                >
+                  Clear All Variants
+                </Button>
+              )}
             </CardContent>
           </Card>
         </motion.div>

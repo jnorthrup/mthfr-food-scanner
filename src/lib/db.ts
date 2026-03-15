@@ -6,6 +6,7 @@ import type {
   ClassificationRule,
   UserConsent,
   ScanHistory,
+  UserMutation,
 } from "@/types";
 
 class MTHFRDatabase extends Dexie {
@@ -15,6 +16,7 @@ class MTHFRDatabase extends Dexie {
   classificationRules!: EntityTable<ClassificationRule, "id">;
   userConsents!: EntityTable<UserConsent, "id">;
   scanHistory!: EntityTable<ScanHistory, "id">;
+  userMutations!: EntityTable<UserMutation, "id">;
 
   constructor() {
     super("MTHFRFoodScanner");
@@ -40,6 +42,19 @@ class MTHFRDatabase extends Dexie {
         "++id, ingredientPattern, safetyStatus, profile, version",
       userConsents: "++id, consentType, granted",
       scanHistory: "++id, productId, scannedAt, upc",
+    });
+
+    this.version(3).stores({
+      products:
+        "++id, upc, name, brand, sourceProvenance, createdAt, isFavorite, lastScannedAt",
+      canonicalIngredients:
+        "++id, canonicalName, *synonyms, safetyStatus, category",
+      maskingTerms: "++id, term, riskLevel",
+      classificationRules:
+        "++id, ingredientPattern, safetyStatus, profile, version",
+      userConsents: "++id, consentType, granted",
+      scanHistory: "++id, productId, scannedAt, upc",
+      userMutations: "++id, mutationId, variant",
     });
   }
 }
@@ -571,82 +586,82 @@ async function seedClassificationRules(): Promise<void> {
       safetyStatus: "unsafe",
       reason:
         "Can cause hemolytic anemia in individuals with G6PD deficiency (Favism).",
-      profile: "genetic_mutations",
+      profile: "mutation_g6pd",
       version: 1,
       createdAt: new Date(),
     },
-    // Allergens Profile
+    // Allergens Profile - Granular
     {
       ingredientPattern: "soy|soya|lecithin \\(soy\\)",
-      safetyStatus: "unknown",
-      reason: "Common allergen. Often genetically modified.",
-      profile: "allergens",
+      safetyStatus: "unsafe",
+      reason: "Soy allergen detected.",
+      profile: "allergy_soy",
       version: 1,
       createdAt: new Date(),
     },
     {
       ingredientPattern: "wheat|gluten",
-      safetyStatus: "unknown",
-      reason: "Common allergen and source of gluten.",
-      profile: "allergens",
+      safetyStatus: "unsafe",
+      reason: "Wheat/Gluten allergen detected.",
+      profile: "allergy_wheat",
       version: 1,
       createdAt: new Date(),
     },
     {
       ingredientPattern: "milk|lactose|whey|casein",
-      safetyStatus: "unknown",
-      reason: "Common dairy allergen.",
-      profile: "allergens",
+      safetyStatus: "unsafe",
+      reason: "Milk/Dairy allergen detected.",
+      profile: "allergy_milk",
       version: 1,
       createdAt: new Date(),
     },
     {
       ingredientPattern: "egg",
-      safetyStatus: "unknown",
-      reason: "Common allergen.",
-      profile: "allergens",
+      safetyStatus: "unsafe",
+      reason: "Egg allergen detected.",
+      profile: "allergy_egg",
       version: 1,
       createdAt: new Date(),
     },
     {
       ingredientPattern: "peanut",
-      safetyStatus: "unknown",
-      reason: "Common high-risk allergen.",
-      profile: "allergens",
+      safetyStatus: "unsafe",
+      reason: "Peanut allergen detected.",
+      profile: "allergy_peanut",
       version: 1,
       createdAt: new Date(),
     },
     {
       ingredientPattern:
         "almond|cashew|walnut|hazelnut|pistachio|macadamia|pecan|brazil nut",
-      safetyStatus: "unknown",
-      reason: "Common tree nut allergen.",
-      profile: "allergens",
+      safetyStatus: "unsafe",
+      reason: "Tree nut allergen detected.",
+      profile: "allergy_treenuts",
       version: 1,
       createdAt: new Date(),
     },
     {
       ingredientPattern: "fish",
-      safetyStatus: "unknown",
-      reason: "Common allergen.",
-      profile: "allergens",
+      safetyStatus: "unsafe",
+      reason: "Fish allergen detected.",
+      profile: "allergy_fish",
       version: 1,
       createdAt: new Date(),
     },
     {
       ingredientPattern:
         "shrimp|prawn|crab|lobster|mussel|clam|oyster|scallop|shellfish",
-      safetyStatus: "unknown",
-      reason: "Common shellfish allergen.",
-      profile: "allergens",
+      safetyStatus: "unsafe",
+      reason: "Shellfish allergen detected.",
+      profile: "allergy_shellfish",
       version: 1,
       createdAt: new Date(),
     },
     {
       ingredientPattern: "sesame",
-      safetyStatus: "unknown",
-      reason: "Common allergen.",
-      profile: "allergens",
+      safetyStatus: "unsafe",
+      reason: "Sesame allergen detected.",
+      profile: "allergy_sesame",
       version: 1,
       createdAt: new Date(),
     },

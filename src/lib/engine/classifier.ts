@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
 import { useAppStore } from "@/lib/store";
+import { checkAllIngredientsContraindications } from "@/lib/engine/mutations";
 import type {
   ProductIngredient,
   NormalizationResult,
@@ -162,6 +163,26 @@ export function calculateProductSafety(
   ingredients: ProductIngredient[],
 ): ProductSafetySummary {
   const allIngredients = flattenIngredients(ingredients);
+  const { userMutations, restrictionSettings } = useAppStore.getState();
+
+  let mutationUnsafeCount = 0;
+  let mutationConcerns: string[] = [];
+
+  if (userMutations.length > 0 && restrictionSettings.genetic_mutations) {
+    const contraindications = checkAllIngredientsContraindications(
+      allIngredients,
+      userMutations,
+    );
+
+    for (const [ingredientName, data] of contraindications) {
+      if (data.contraindication.severity === "avoid") {
+        mutationUnsafeCount++;
+        mutationConcerns.push(
+          `${ingredientName}: ${data.contraindication.reason} (${data.contraindication.severity})`,
+        );
+      }
+    }
+  }
 
   const safeCount = allIngredients.filter(
     (i) => i.safetyStatus === "safe",
@@ -180,7 +201,7 @@ export function calculateProductSafety(
   const maskingIngredients = allIngredients.filter((i) => i.isMasking);
 
   let overallStatus: SafetyStatus;
-  if (unsafeCount > 0) {
+  if (unsafeCount > 0 || mutationUnsafeCount > 0) {
     overallStatus = "unsafe";
   } else if (
     unknownCount > totalIngredients * 0.5 ||
@@ -196,7 +217,7 @@ export function calculateProductSafety(
   return {
     overallStatus,
     safeCount,
-    unsafeCount,
+    unsafeCount: unsafeCount + mutationUnsafeCount,
     unknownCount,
     safePercentage:
       totalIngredients > 0
@@ -204,7 +225,7 @@ export function calculateProductSafety(
         : 0,
     unsafePercentage:
       totalIngredients > 0
-        ? Math.round((unsafeCount / totalIngredients) * 100)
+        ? Math.round(((unsafeCount + mutationUnsafeCount) / totalIngredients) * 100)
         : 0,
     unknownPercentage:
       totalIngredients > 0

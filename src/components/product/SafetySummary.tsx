@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import type { ProductSafetySummary, SafetyStatus } from "@/types";
 import { cn } from "@/lib/utils";
+import { AnimatePresence } from "framer-motion";
 
 interface SafetySummaryProps {
   summary: ProductSafetySummary;
@@ -95,18 +96,33 @@ export function SafetySummary({
         data-design-id="safety-summary-header"
         className="flex items-center gap-3"
       >
-        <div
+        <motion.div
           className={cn(
-            "w-14 h-14 rounded-xl flex items-center justify-center",
+            "w-14 h-14 rounded-xl flex items-center justify-center relative shadow-lg overflow-hidden",
             summary.overallStatus === "safe"
               ? "bg-emerald-500"
               : summary.overallStatus === "unsafe"
                 ? "bg-red-500"
                 : "bg-amber-500",
           )}
+          animate={{
+            boxShadow: [
+              "0 0 0px rgba(var(--primary),0)",
+              "0 0 20px rgba(var(--primary),0.3)",
+              "0 0 0px rgba(var(--primary),0)"
+            ]
+          }}
+          transition={{ repeat: Infinity, duration: 3 }}
         >
-          <StatusIcon className="w-7 h-7 text-white" />
-        </div>
+          {/* Subtle inner glow */}
+          <div className="absolute inset-0 bg-gradient-to-tr from-white/10 to-transparent" />
+          <motion.div
+            animate={{ scale: [1, 1.1, 1] }}
+            transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
+          >
+            <StatusIcon className="w-7 h-7 text-white relative z-10" />
+          </motion.div>
+        </motion.div>
         <div>
           <h3
             data-design-id="safety-summary-title"
@@ -124,27 +140,29 @@ export function SafetySummary({
       </div>
 
       <div data-design-id="safety-summary-bars" className="space-y-2">
-        <div className="h-3 rounded-full bg-muted overflow-hidden flex">
+        <div className="h-3 rounded-full bg-muted/50 overflow-hidden flex shadow-inner border border-black/5 dark:border-white/5">
           <motion.div
             data-design-id="safety-bar-safe"
             initial={{ width: 0 }}
             animate={{ width: `${summary.safePercentage}%` }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-            className="h-full bg-emerald-500"
-          />
+            transition={{ duration: 0.8, ease: "circOut" }}
+            className="h-full bg-gradient-to-r from-emerald-600 to-emerald-400 relative"
+          >
+            <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(255,255,255,0.1)_50%,transparent_75%)] bg-[length:250%_250%] animate-shimmer" />
+          </motion.div>
           <motion.div
             data-design-id="safety-bar-unknown"
             initial={{ width: 0 }}
             animate={{ width: `${summary.unknownPercentage}%` }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="h-full bg-amber-500"
+            transition={{ duration: 0.8, ease: "circOut", delay: 0.1 }}
+            className="h-full bg-gradient-to-r from-amber-600 to-amber-400"
           />
           <motion.div
             data-design-id="safety-bar-unsafe"
             initial={{ width: 0 }}
             animate={{ width: `${summary.unsafePercentage}%` }}
-            transition={{ duration: 0.5, delay: 0.3 }}
-            className="h-full bg-red-500"
+            transition={{ duration: 0.8, ease: "circOut", delay: 0.2 }}
+            className="h-full bg-gradient-to-r from-red-600 to-red-400"
           />
         </div>
 
@@ -179,32 +197,49 @@ export function SafetySummary({
             <XCircle className="w-4 h-4" />
             Unsafe Ingredients
           </h4>
-          <div className="space-y-1.5">
+          <motion.div
+            className="space-y-1.5"
+            initial="hidden"
+            animate="show"
+            variants={{
+              show: { transition: { staggerChildren: 0.1 } },
+            }}
+          >
             {summary.unsafeIngredients.slice(0, 5).map((ing, index) => (
-              <div
+              <motion.div
                 key={index}
+                variants={{
+                  hidden: { opacity: 0, x: -10 },
+                  show: { opacity: 1, x: 0 },
+                }}
                 data-design-id={`unsafe-ingredient-${index}`}
-                className="flex items-start gap-2 text-sm bg-red-100 dark:bg-red-900/30 rounded-lg px-3 py-2"
+                className="flex items-start gap-2 text-sm bg-red-100/50 dark:bg-red-900/20 rounded-xl px-3 py-2 border border-red-200/50 dark:border-red-800/50 backdrop-blur-sm"
               >
                 <AlertTriangle className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />
                 <div>
-                  <span className="font-medium text-red-700 dark:text-red-300">
+                  <span className="font-semibold text-red-700 dark:text-red-300">
                     {ing.canonicalName}
                   </span>
-                  {ing.safetyReason && (
-                    <p className="text-xs text-red-600/80 dark:text-red-400/80 mt-0.5">
-                      {ing.safetyReason}
-                    </p>
-                  )}
+                  <AnimatePresence>
+                    {ing.safetyReason && (
+                      <motion.p
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        className="text-xs text-red-600/80 dark:text-red-400/80 mt-0.5"
+                      >
+                        {ing.safetyReason}
+                      </motion.p>
+                    )}
+                  </AnimatePresence>
                 </div>
-              </div>
+              </motion.div>
             ))}
             {summary.unsafeIngredients.length > 5 && (
               <p className="text-xs text-red-500 pl-6">
                 +{summary.unsafeIngredients.length - 5} more unsafe ingredients
               </p>
             )}
-          </div>
+          </motion.div>
         </div>
       )}
 
@@ -214,16 +249,27 @@ export function SafetySummary({
             <AlertTriangle className="w-4 h-4" />
             Masking Ingredients
           </h4>
-          <div className="space-y-1.5">
+          <motion.div
+            className="space-y-1.5"
+            initial="hidden"
+            animate="show"
+            variants={{
+              show: { transition: { staggerChildren: 0.1 } },
+            }}
+          >
             {summary.maskingIngredients.slice(0, 3).map((ing, index) => (
-              <div
+              <motion.div
                 key={index}
+                variants={{
+                  hidden: { opacity: 0, x: -10 },
+                  show: { opacity: 1, x: 0 },
+                }}
                 data-design-id={`masking-ingredient-${index}`}
-                className="flex items-start gap-2 text-sm bg-violet-100 dark:bg-violet-900/30 rounded-lg px-3 py-2"
+                className="flex items-start gap-2 text-sm bg-violet-100/50 dark:bg-violet-900/20 rounded-xl px-3 py-2 border border-violet-200/50 dark:border-violet-800/50 backdrop-blur-sm"
               >
                 <AlertTriangle className="w-4 h-4 text-violet-500 mt-0.5 flex-shrink-0" />
                 <div>
-                  <span className="font-medium text-violet-700 dark:text-violet-300">
+                  <span className="font-semibold text-violet-700 dark:text-violet-300">
                     {ing.canonicalName}
                   </span>
                   {ing.maskingReason && (
@@ -232,9 +278,9 @@ export function SafetySummary({
                     </p>
                   )}
                 </div>
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
       )}
     </motion.div>

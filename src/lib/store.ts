@@ -5,6 +5,7 @@ import type {
   UserConsent,
   ConsentType,
   RestrictionProfileId,
+  UserMutation,
 } from "@/types";
 
 interface AppStore {
@@ -13,6 +14,7 @@ interface AppStore {
   favorites: Product[];
   consents: Record<ConsentType, UserConsent>;
   restrictionSettings: Record<RestrictionProfileId, boolean>;
+  userMutations: UserMutation[];
   isLoading: boolean;
   error: string | null;
   hasCompletedOnboarding: boolean;
@@ -23,6 +25,9 @@ interface AppStore {
   toggleFavorite: (productId: number) => void;
   setConsent: (type: ConsentType, granted: boolean) => void;
   toggleRestriction: (profileId: RestrictionProfileId) => void;
+  addUserMutation: (mutation: Omit<UserMutation, "id" | "addedAt">) => void;
+  removeUserMutation: (id: number) => void;
+  clearUserMutations: () => void;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
   completeOnboarding: () => void;
@@ -47,6 +52,16 @@ const defaultRestrictions: Record<RestrictionProfileId, boolean> = {
   genetic_mutations: true,
   allergens: true,
   additives: true,
+  allergy_soy: false,
+  allergy_wheat: false,
+  allergy_milk: false,
+  allergy_egg: false,
+  allergy_peanut: false,
+  allergy_treenuts: false,
+  allergy_fish: false,
+  allergy_shellfish: false,
+  allergy_sesame: false,
+  mutation_g6pd: false,
 };
 
 export const useAppStore = create<AppStore>()(
@@ -57,6 +72,7 @@ export const useAppStore = create<AppStore>()(
       favorites: [],
       consents: defaultConsents,
       restrictionSettings: defaultRestrictions,
+      userMutations: [],
       isLoading: false,
       error: null,
       hasCompletedOnboarding: false,
@@ -131,6 +147,37 @@ export const useAppStore = create<AppStore>()(
       completeOnboarding: () => set({ hasCompletedOnboarding: true }),
       setActiveTab: (tab) => set({ activeTab: tab }),
       clearHistory: () => set({ scanHistory: [] }),
+
+      addUserMutation: (mutation) => {
+        const mutations = get().userMutations;
+        const existing = mutations.find(
+          (m) => m.mutationId === mutation.mutationId,
+        );
+        if (existing) {
+          set({
+            userMutations: mutations.map((m) =>
+              m.mutationId === mutation.mutationId
+                ? { ...m, variant: mutation.variant, genotype: mutation.genotype }
+                : m,
+            ),
+          });
+        } else {
+          set({
+            userMutations: [
+              ...mutations,
+              { ...mutation, addedAt: new Date() },
+            ],
+          });
+        }
+      },
+
+      removeUserMutation: (id) => {
+        set({
+          userMutations: get().userMutations.filter((m) => m.id !== id),
+        });
+      },
+
+      clearUserMutations: () => set({ userMutations: [] }),
     }),
     {
       name: "mthfr-scanner-storage",
@@ -139,6 +186,7 @@ export const useAppStore = create<AppStore>()(
         favorites: state.favorites,
         consents: state.consents,
         restrictionSettings: state.restrictionSettings,
+        userMutations: state.userMutations,
         hasCompletedOnboarding: state.hasCompletedOnboarding,
       }),
     },
