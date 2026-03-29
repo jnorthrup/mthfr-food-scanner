@@ -36,12 +36,7 @@ export function AppShell() {
         data-design-id="loading-screen"
         className="fixed inset-0 flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-950"
       >
-        <motion.div
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 0.5 }}
-          className="flex flex-col items-center"
-        >
+        <div className="flex flex-col items-center">
           <div
             data-design-id="loading-icon"
             className="w-24 h-24 rounded-3xl bg-gradient-to-br from-primary to-emerald-600 flex items-center justify-center mb-8 shadow-2xl shadow-primary/30"
@@ -55,7 +50,7 @@ export function AppShell() {
             <Loader2 className="w-5 h-5 animate-spin text-primary" />
             <span data-design-id="loading-text">Optimizing Engines...</span>
           </div>
-        </motion.div>
+        </div>
       </div>
     );
   }
