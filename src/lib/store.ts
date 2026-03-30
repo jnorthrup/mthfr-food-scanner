@@ -1,11 +1,11 @@
+import type {
+  ConsentType,
+  Product,
+  RestrictionProfileId,
+  UserConsent,
+} from "@/types";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type {
-  Product,
-  UserConsent,
-  ConsentType,
-  RestrictionProfileId,
-} from "@/types";
 
 interface AppStore {
   currentProduct: Product | null;

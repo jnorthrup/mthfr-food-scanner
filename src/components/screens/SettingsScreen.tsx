@@ -1,30 +1,12 @@
 "use client";
 
-import { useState } from "react";
-import { motion } from "framer-motion";
-import {
-  Settings,
-  Shield,
-  Database,
-  Trash2,
-  Download,
-  Info,
-  Moon,
-  Sun,
-  HelpCircle,
-  BookOpen,
-  Mail,
-  ExternalLink,
-  ChevronRight,
-  Stethoscope,
-  Globe,
-  Dna,
-  MilkOff,
-  Beaker,
-} from "lucide-react";
-import { useAppStore } from "@/lib/store";
-import { exportData, clearAllData } from "@/lib/db";
 import { ConsentManager } from "@/components/settings/ConsentManager";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -33,9 +15,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Switch } from "@/components/ui/switch";
 import {
   Dialog,
   DialogContent,
@@ -45,12 +24,33 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
+import { Switch } from "@/components/ui/switch";
+import { clearAllData, exportData } from "@/lib/db";
+import { useAppStore } from "@/lib/store";
+import { motion } from "framer-motion";
 import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
+  Beaker,
+  BookOpen,
+  ChevronRight,
+  Database,
+  Dna,
+  Download,
+  ExternalLink,
+  Globe,
+  HelpCircle,
+  Info,
+  Mail,
+  MilkOff,
+  Moon,
+  Settings,
+  Shield,
+  Stethoscope,
+  Sun,
+  Trash2,
+} from "lucide-react";
+import { useState } from "react";
 import { toast } from "sonner";
 
 export function SettingsScreen() {
@@ -117,14 +117,6 @@ export function SettingsScreen() {
           >
             Manage your preferences and data
           </p>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-        >
-          <ConsentManager />
         </motion.div>
 
         <motion.div
@@ -247,7 +239,7 @@ export function SettingsScreen() {
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
+          transition={{ delay: 0.25 }}
         >
           <Card data-design-id="appearance-card">
             <CardHeader className="pb-3">

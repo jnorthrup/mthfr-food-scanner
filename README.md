@@ -1,3 +1,9 @@
+# MTHFR Food Scanner
+
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-GitHub%20Pages-blue)](https://jnorthrup.github.io/mthfr-food-scanner/)
+
+Scan food products and evaluate ingredient safety for MTHFR methylation health. Identify unsafe ingredients, masking terms, and get personalized safety recommendations.
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started
