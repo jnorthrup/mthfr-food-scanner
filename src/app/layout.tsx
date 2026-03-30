@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
-import ClientBody from "./ClientBody";
 import { Toaster } from "@/components/ui/sonner";
+import ClientBody from "./ClientBody";
 
 export const metadata: Metadata = {
   title: "MTHFR Food Scanner",
