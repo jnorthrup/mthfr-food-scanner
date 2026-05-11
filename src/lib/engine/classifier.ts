@@ -161,6 +161,21 @@ export function classifyIngredientsList(
 export function calculateProductSafety(
   ingredients: ProductIngredient[],
 ): ProductSafetySummary {
+  if (!ingredients || ingredients.length === 0) {
+    return {
+      overallStatus: "unknown",
+      safeCount: 0,
+      unsafeCount: 0,
+      unknownCount: 0,
+      safePercentage: 0,
+      unsafePercentage: 0,
+      unknownPercentage: 0,
+      unsafeIngredients: [],
+      maskingIngredients: [],
+      totalIngredients: 0,
+    };
+  }
+
   const allIngredients = flattenIngredients(ingredients);
 
   const safeCount = allIngredients.filter(
