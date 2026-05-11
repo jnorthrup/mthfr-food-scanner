@@ -1,14 +1,14 @@
+import { generateMockProduct, lookupProductByUPC } from "@/lib/api/product-api";
 import { db, initializeDatabase } from "@/lib/db";
-import { lookupProductByUPC, generateMockProduct } from "@/lib/api/product-api";
 import {
-  normalizeIngredientsList,
-  initializeNormalizer,
-} from "@/lib/engine/normalizer";
-import {
+  calculateProductSafety,
   classifyIngredientsList,
   initializeClassifier,
-  calculateProductSafety,
 } from "@/lib/engine/classifier";
+import {
+  initializeNormalizer,
+  normalizeIngredientsList,
+} from "@/lib/engine/normalizer";
 import type {
   Product,
   ProductIngredient,
@@ -221,12 +221,23 @@ export async function getProductHistory(limit = 50): Promise<Product[]> {
     .limit(limit)
     .toArray();
 
+  const uniqueIds = Array.from(new Set(history.map((e) => e.productId)));
+  const productsArray = await db.products.bulkGet(uniqueIds);
+
+  const productMap = new Map();
+  for (let i = 0; i < uniqueIds.length; i++) {
+    const p = productsArray[i];
+    if (p && p.id !== undefined) {
+      productMap.set(p.id, p);
+    }
+  }
+
   const products: Product[] = [];
   const seen = new Set<number>();
 
   for (const entry of history) {
     if (!seen.has(entry.productId)) {
-      const product = await db.products.get(entry.productId);
+      const product = productMap.get(entry.productId);
       if (product) {
         products.push({ ...product, lastScannedAt: entry.scannedAt });
         seen.add(entry.productId);
