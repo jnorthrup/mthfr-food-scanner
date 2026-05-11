@@ -59,7 +59,6 @@ export function BarcodeScanner({
         },
         (errorMessage) => {
           // Failure callback is noisy, we typically ignore it for sweeps
-          // console.log("Scan fail:", errorMessage);
         },
       );
     }, 100);
