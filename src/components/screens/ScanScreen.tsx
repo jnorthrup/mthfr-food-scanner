@@ -273,6 +273,7 @@ export function ScanScreen() {
                       window.open(
                         `https://www.google.com/search?q=UPC+${lastScannedUPC}`,
                         "_blank",
+                        "noopener,noreferrer",
                       )
                     }
                     className="w-full"
