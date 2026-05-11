@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft,
@@ -33,27 +33,17 @@ import type { Product, SafetyStatus } from "@/types";
 type SortOption = "recent" | "name" | "safety";
 type FilterOption = "all" | "safe" | "unsafe" | "unknown";
 
-export function HistoryScreen() {
-  const {
-    scanHistory,
-    favorites,
-    currentProduct,
-    setCurrentProduct,
-    toggleFavorite,
-    clearHistory,
-  } = useAppStore();
-
+function useHistoryFilter(products: Product[]) {
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState<SortOption>("recent");
   const [filterBy, setFilterBy] = useState<FilterOption>("all");
-  const [activeTab, setActiveTab] = useState<"all" | "favorites">("all");
 
   const getProductSafetyStatus = (product: Product): SafetyStatus => {
     const safety = calculateProductSafety(product.ingredients);
     return safety.overallStatus;
   };
 
-  const filterProducts = (products: Product[]) => {
+  const filteredProducts = useMemo(() => {
     let filtered = [...products];
 
     if (searchQuery) {
@@ -91,76 +81,177 @@ export function HistoryScreen() {
     });
 
     return filtered;
-  };
+  }, [products, searchQuery, filterBy, sortBy]);
 
+  return {
+    searchQuery,
+    setSearchQuery,
+    sortBy,
+    setSortBy,
+    filterBy,
+    setFilterBy,
+    filteredProducts,
+  };
+}
+
+function ProductList({
+  products,
+  searchQuery,
+  activeTab,
+  onSelectProduct,
+}: {
+  products: Product[];
+  searchQuery: string;
+  activeTab: "all" | "favorites";
+  onSelectProduct: (product: Product) => void;
+}) {
+  return (
+    <AnimatePresence mode="popLayout">
+      {products.length > 0 ? (
+        products.map((product, index) => (
+          <motion.div
+            key={product.id}
+            layout
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            transition={{ delay: index * 0.05 }}
+          >
+            <ProductCard
+              product={product}
+              compact
+              onSelect={() => onSelectProduct(product)}
+            />
+          </motion.div>
+        ))
+      ) : (
+        <motion.div
+          data-design-id="history-empty"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="text-center py-16"
+        >
+          <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
+            <Package className="w-10 h-10 text-muted-foreground" />
+          </div>
+          <h3 data-design-id="empty-title" className="font-semibold mb-2">
+            {searchQuery
+              ? "No matching products"
+              : activeTab === "favorites"
+                ? "No favorites yet"
+                : "No products scanned"}
+          </h3>
+          <p
+            data-design-id="empty-desc"
+            className="text-sm text-muted-foreground"
+          >
+            {searchQuery
+              ? "Try adjusting your search or filters"
+              : activeTab === "favorites"
+                ? "Tap the heart icon on a product to add it to favorites"
+                : "Start scanning products to build your history"}
+          </p>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
+
+function ProductDetailView({
+  product,
+  onBack,
+  onToggleFavorite,
+}: {
+  product: Product;
+  onBack: () => void;
+  onToggleFavorite: (id: string) => void;
+}) {
+  return (
+    <div
+      data-design-id="product-detail"
+      className="h-full flex flex-col bg-background"
+    >
+      <div
+        data-design-id="detail-header"
+        className="p-4 flex items-center gap-3 border-b"
+      >
+        <Button
+          data-design-id="detail-back"
+          variant="ghost"
+          size="icon"
+          onClick={onBack}
+        >
+          <ArrowLeft className="w-5 h-5" />
+        </Button>
+        <h2 className="font-semibold flex-1 truncate">{product.name}</h2>
+        <Button
+          data-design-id="detail-favorite"
+          variant="ghost"
+          size="icon"
+          onClick={() => product.id && onToggleFavorite(product.id)}
+        >
+          <Heart
+            className={`w-5 h-5 ${product.isFavorite ? "fill-red-500 text-red-500" : ""}`}
+          />
+        </Button>
+      </div>
+
+      <ScrollArea className="flex-1">
+        <div className="p-5 space-y-6 pb-24">
+          <ProductCard product={product} />
+
+          <IngredientList ingredients={product.ingredients} showProvenance />
+
+          <div
+            data-design-id="product-meta"
+            className="text-xs text-muted-foreground space-y-1"
+          >
+            <p>UPC: {product.upc}</p>
+            <p>Source: {product.sourceProvenance}</p>
+            <p>Added: {new Date(product.createdAt).toLocaleDateString()}</p>
+            {product.lastScannedAt && (
+              <p>
+                Last scanned:{" "}
+                {new Date(product.lastScannedAt).toLocaleDateString()}
+              </p>
+            )}
+          </div>
+        </div>
+      </ScrollArea>
+    </div>
+  );
+}
+
+export function HistoryScreen() {
+  const {
+    scanHistory,
+    favorites,
+    currentProduct,
+    setCurrentProduct,
+    toggleFavorite,
+    clearHistory,
+  } = useAppStore();
+
+  const [activeTab, setActiveTab] = useState<"all" | "favorites">("all");
   const displayProducts = activeTab === "favorites" ? favorites : scanHistory;
-  const filteredProducts = filterProducts(displayProducts);
+
+  const {
+    searchQuery,
+    setSearchQuery,
+    sortBy,
+    setSortBy,
+    filterBy,
+    setFilterBy,
+    filteredProducts,
+  } = useHistoryFilter(displayProducts);
 
   if (currentProduct) {
-    const safety = calculateProductSafety(currentProduct.ingredients);
-
     return (
-      <div
-        data-design-id="product-detail"
-        className="h-full flex flex-col bg-background"
-      >
-        <div
-          data-design-id="detail-header"
-          className="p-4 flex items-center gap-3 border-b"
-        >
-          <Button
-            data-design-id="detail-back"
-            variant="ghost"
-            size="icon"
-            onClick={() => setCurrentProduct(null)}
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
-          <h2 className="font-semibold flex-1 truncate">
-            {currentProduct.name}
-          </h2>
-          <Button
-            data-design-id="detail-favorite"
-            variant="ghost"
-            size="icon"
-            onClick={() =>
-              currentProduct.id && toggleFavorite(currentProduct.id)
-            }
-          >
-            <Heart
-              className={`w-5 h-5 ${currentProduct.isFavorite ? "fill-red-500 text-red-500" : ""}`}
-            />
-          </Button>
-        </div>
-
-        <ScrollArea className="flex-1">
-          <div className="p-5 space-y-6 pb-24">
-            <ProductCard product={currentProduct} />
-
-            <IngredientList
-              ingredients={currentProduct.ingredients}
-              showProvenance
-            />
-
-            <div
-              data-design-id="product-meta"
-              className="text-xs text-muted-foreground space-y-1"
-            >
-              <p>UPC: {currentProduct.upc}</p>
-              <p>Source: {currentProduct.sourceProvenance}</p>
-              <p>
-                Added: {new Date(currentProduct.createdAt).toLocaleDateString()}
-              </p>
-              {currentProduct.lastScannedAt && (
-                <p>
-                  Last scanned:{" "}
-                  {new Date(currentProduct.lastScannedAt).toLocaleDateString()}
-                </p>
-              )}
-            </div>
-          </div>
-        </ScrollArea>
-      </div>
+      <ProductDetailView
+        product={currentProduct}
+        onBack={() => setCurrentProduct(null)}
+        onToggleFavorite={toggleFavorite}
+      />
     );
   }
 
@@ -267,54 +358,12 @@ export function HistoryScreen() {
 
       <ScrollArea className="flex-1">
         <div className="p-4 pb-24 space-y-2">
-          <AnimatePresence mode="popLayout">
-            {filteredProducts.length > 0 ? (
-              filteredProducts.map((product, index) => (
-                <motion.div
-                  key={product.id}
-                  layout
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.9 }}
-                  transition={{ delay: index * 0.05 }}
-                >
-                  <ProductCard
-                    product={product}
-                    compact
-                    onSelect={() => setCurrentProduct(product)}
-                  />
-                </motion.div>
-              ))
-            ) : (
-              <motion.div
-                data-design-id="history-empty"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="text-center py-16"
-              >
-                <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
-                  <Package className="w-10 h-10 text-muted-foreground" />
-                </div>
-                <h3 data-design-id="empty-title" className="font-semibold mb-2">
-                  {searchQuery
-                    ? "No matching products"
-                    : activeTab === "favorites"
-                      ? "No favorites yet"
-                      : "No products scanned"}
-                </h3>
-                <p
-                  data-design-id="empty-desc"
-                  className="text-sm text-muted-foreground"
-                >
-                  {searchQuery
-                    ? "Try adjusting your search or filters"
-                    : activeTab === "favorites"
-                      ? "Tap the heart icon on a product to add it to favorites"
-                      : "Start scanning products to build your history"}
-                </p>
-              </motion.div>
-            )}
-          </AnimatePresence>
+          <ProductList
+            products={filteredProducts}
+            searchQuery={searchQuery}
+            activeTab={activeTab}
+            onSelectProduct={setCurrentProduct}
+          />
         </div>
       </ScrollArea>
     </div>
