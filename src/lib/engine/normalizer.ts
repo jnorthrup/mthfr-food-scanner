@@ -84,7 +84,7 @@ export function parseIngredientsList(rawText: string): string[] {
     }
   }
 
-  return result.map((s) => s.trim()).filter((s) => s.length > 0);
+  return result.map((s) => s.trimEnd()).filter((s) => s.length > 0);
 }
 
 export function normalizeIngredientText(text: string): string {
@@ -143,30 +143,32 @@ export async function normalizeIngredientsList(
   rawText: string,
 ): Promise<NormalizationResult[]> {
   const parsed = parseIngredientsList(rawText);
-  const results: NormalizationResult[] = [];
 
-  for (const ingredient of parsed) {
-    const isSubIngredient = ingredient.startsWith("  ");
-    const cleanedIngredient = ingredient.trim();
+  const normalizationPromises = parsed.map((ingredient) => {
+    return normalizeIngredient(ingredient.trim());
+  });
 
-    if (cleanedIngredient) {
-      const result = await normalizeIngredient(cleanedIngredient);
+  const normalizedResults = await Promise.all(normalizationPromises);
 
-      if (isSubIngredient) {
-        const lastParent = results[results.length - 1];
-        if (lastParent && !lastParent.subIngredients) {
+  const finalResults: NormalizationResult[] = [];
+  for (let i = 0; i < parsed.length; i++) {
+    const ingredient = parsed[i];
+    const result = normalizedResults[i];
+
+    if (ingredient.startsWith("  ")) {
+      const lastParent = finalResults[finalResults.length - 1];
+      if (lastParent) {
+        if (!lastParent.subIngredients) {
           lastParent.subIngredients = [];
         }
-        if (lastParent) {
-          lastParent.subIngredients!.push(result);
-        }
-      } else {
-        results.push(result);
+        lastParent.subIngredients.push(result);
       }
+    } else {
+      finalResults.push(result);
     }
   }
 
-  return results;
+  return finalResults;
 }
 
 export function calculateOverallConfidence(
