@@ -113,36 +113,43 @@ export async function lookupProductByUPC(
   upc: string,
 ): Promise<ProductLookupResult> {
   const normalizedUPC = normalizeUPC(upc);
-  const searchedAPIs: string[] = [];
+  const searchedAPIs = API_PROVIDERS.map((p) => p.name);
 
-  for (const provider of API_PROVIDERS.sort(
-    (a, b) => a.priority - b.priority,
-  )) {
-    searchedAPIs.push(provider.name);
+  try {
+    const result = await Promise.any(
+      API_PROVIDERS.map(async (provider) => {
+        try {
+          const product = await provider.fetchProduct(normalizedUPC);
+          if (product) {
+            return product;
+          }
+          throw new Error(`Product not found in ${provider.name}`);
+        } catch (error) {
+          if (error instanceof Error && error.message.startsWith('Product not found in')) {
+            throw error;
+          }
+          console.error(`Error fetching from ${provider.name}:`, error);
+          throw error;
+        }
+      })
+    );
 
-    try {
-      const result = await provider.fetchProduct(normalizedUPC);
-
-      if (result) {
-        return {
-          success: true,
-          product: result,
-          source: "api",
-          searchedAPIs,
-        };
-      }
-    } catch (error) {
-      console.error(`Error fetching from ${provider.name}:`, error);
-    }
+    return {
+      success: true,
+      product: result,
+      source: "api",
+      searchedAPIs,
+    };
+  } catch (error) {
+    // All promises rejected (either threw an error or returned null)
+    return {
+      success: false,
+      product: null,
+      source: "api",
+      error: "Product not found in any database",
+      searchedAPIs,
+    };
   }
-
-  return {
-    success: false,
-    product: null,
-    source: "api",
-    error: "Product not found in any database",
-    searchedAPIs,
-  };
 }
 
 export function normalizeUPC(upc: string): string {
