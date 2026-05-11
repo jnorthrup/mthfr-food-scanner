@@ -14,6 +14,25 @@ let classificationRules: MTHFRClassificationRule[] = [];
 let maskingTerms: MaskingTerm[] = [];
 const canonicalIngredients: Map<string, CanonicalIngredient> = new Map();
 
+const vaguePhrases = [
+  {
+    pattern: /and\/or/i,
+    reason: "Ingredient composition is variable and unspecified",
+  },
+  {
+    pattern: /one or more of/i,
+    reason: "Multiple possible ingredients, exact composition unknown",
+  },
+  {
+    pattern: /may contain/i,
+    reason: "Potential cross-contamination or variable formulation",
+  },
+  {
+    pattern: /less than \d+%/i,
+    reason: "Minor ingredients may not be fully disclosed",
+  },
+];
+
 export async function initializeClassifier(): Promise<void> {
   classificationRules = await db.classificationRules.toArray();
   maskingTerms = await db.maskingTerms.toArray();
@@ -110,25 +129,6 @@ function checkForMasking(text: string): {
       };
     }
   }
-
-  const vaguePhrases = [
-    {
-      pattern: /and\/or/i,
-      reason: "Ingredient composition is variable and unspecified",
-    },
-    {
-      pattern: /one or more of/i,
-      reason: "Multiple possible ingredients, exact composition unknown",
-    },
-    {
-      pattern: /may contain/i,
-      reason: "Potential cross-contamination or variable formulation",
-    },
-    {
-      pattern: /less than \d+%/i,
-      reason: "Minor ingredients may not be fully disclosed",
-    },
-  ];
 
   for (const phrase of vaguePhrases) {
     if (phrase.pattern.test(text)) {
