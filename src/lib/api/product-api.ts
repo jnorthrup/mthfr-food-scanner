@@ -12,11 +12,16 @@ async function fetchFromOpenFoodFacts(
   upc: string,
 ): Promise<APIProductResponse | null> {
   try {
+    const userAgentEmail = process.env.NEXT_PUBLIC_OFF_CONTACT_EMAIL;
+    const userAgent = userAgentEmail
+      ? `MTHFRFoodScanner/1.0 (${userAgentEmail})`
+      : "MTHFRFoodScanner/1.0";
+
     const response = await fetch(
       `${OPEN_FOOD_FACTS_BASE}/product/${upc}.json`,
       {
         headers: {
-          "User-Agent": "MTHFRFoodScanner/1.0 (contact@example.com)",
+          "User-Agent": userAgent,
         },
       },
     );
