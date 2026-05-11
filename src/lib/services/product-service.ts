@@ -37,6 +37,15 @@ export interface ProcessProductResult {
   notFound?: boolean;
 }
 
+export interface ProcessProductOptions {
+  upc: string;
+  name: string;
+  ingredientsText: string;
+  brand?: string;
+  imageUrl?: string;
+  source?: SourceProvenance;
+}
+
 export async function processProductByUPC(
   upc: string,
   useMockOnFail = false,
@@ -66,14 +75,14 @@ export async function processProductByUPC(
   if (!apiResult.success || !apiResult.product) {
     if (useMockOnFail) {
       const mockData = generateMockProduct(upc);
-      return processProductFromData(
-        mockData.upc,
-        mockData.name,
-        mockData.ingredients || "",
-        mockData.brand,
-        mockData.imageUrl,
-        "manual",
-      );
+      return processProductFromData({
+        upc: mockData.upc,
+        name: mockData.name,
+        ingredientsText: mockData.ingredients || "",
+        brand: mockData.brand,
+        imageUrl: mockData.imageUrl,
+        source: "manual",
+      });
     }
 
     return {
@@ -88,24 +97,24 @@ export async function processProductByUPC(
 
   const apiProduct = apiResult.product;
 
-  return processProductFromData(
-    apiProduct.upc,
-    apiProduct.name,
-    apiProduct.ingredients || "",
-    apiProduct.brand,
-    apiProduct.imageUrl,
-    "api",
-  );
+  return processProductFromData({
+    upc: apiProduct.upc,
+    name: apiProduct.name,
+    ingredientsText: apiProduct.ingredients || "",
+    brand: apiProduct.brand,
+    imageUrl: apiProduct.imageUrl,
+    source: "api",
+  });
 }
 
-export async function processProductFromData(
-  upc: string,
-  name: string,
-  ingredientsText: string,
-  brand?: string,
-  imageUrl?: string,
-  source: SourceProvenance = "manual",
-): Promise<ProcessProductResult> {
+export async function processProductFromData({
+  upc,
+  name,
+  ingredientsText,
+  brand,
+  imageUrl,
+  source = "manual",
+}: ProcessProductOptions): Promise<ProcessProductResult> {
   await initializeServices();
 
   try {
