@@ -61,7 +61,7 @@ export default function RootLayout({
             if (window === window.parent || window.__DESIGN_NAV_REPORTER__) return;
             window.__DESIGN_NAV_REPORTER__ = true;
             function report() {
-              try { window.parent.postMessage({ type: 'IFRAME_URL_CHANGE', payload: { url: location.origin + location.pathname + location.hash } }, '*'); } catch(e) {}
+              try { window.parent.postMessage({ type: 'IFRAME_URL_CHANGE', payload: { url: location.origin + location.pathname + location.hash } }, 'https://same.dev'); } catch(e) {}
             }
             report();
             var ps = history.pushState, rs = history.replaceState;
