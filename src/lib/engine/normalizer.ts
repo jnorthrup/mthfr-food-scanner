@@ -1,6 +1,6 @@
-import Fuse from "fuse.js";
 import { db } from "@/lib/db";
-import type { NormalizationResult, CanonicalIngredient } from "@/types";
+import type { CanonicalIngredient, NormalizationResult } from "@/types";
+import Fuse from "fuse.js";
 
 let fuseIndex: Fuse<CanonicalIngredient> | null = null;
 const ingredientCache: Map<string, CanonicalIngredient> = new Map();
@@ -143,26 +143,35 @@ export async function normalizeIngredientsList(
   rawText: string,
 ): Promise<NormalizationResult[]> {
   const parsed = parseIngredientsList(rawText);
-  const results: NormalizationResult[] = [];
 
-  for (const ingredient of parsed) {
+  const promises = parsed.map((ingredient) => {
     const isSubIngredient = ingredient.startsWith("  ");
     const cleanedIngredient = ingredient.trim();
+    if (!cleanedIngredient) return Promise.resolve(null);
+    return normalizeIngredient(cleanedIngredient).then((result) => ({
+      isSubIngredient,
+      result,
+    }));
+  });
 
-    if (cleanedIngredient) {
-      const result = await normalizeIngredient(cleanedIngredient);
+  const normalizedItems = await Promise.all(promises);
 
-      if (isSubIngredient) {
-        const lastParent = results[results.length - 1];
-        if (lastParent && !lastParent.subIngredients) {
+  const results: NormalizationResult[] = [];
+
+  for (let i = 0; i < normalizedItems.length; i++) {
+    const item = normalizedItems[i];
+    if (!item) continue;
+
+    if (item.isSubIngredient) {
+      const lastParent = results[results.length - 1];
+      if (lastParent) {
+        if (!lastParent.subIngredients) {
           lastParent.subIngredients = [];
         }
-        if (lastParent) {
-          lastParent.subIngredients!.push(result);
-        }
-      } else {
-        results.push(result);
+        lastParent.subIngredients.push(item.result);
       }
+    } else {
+      results.push(item.result);
     }
   }
 
