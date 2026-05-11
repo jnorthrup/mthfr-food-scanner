@@ -87,14 +87,14 @@ export function ScanScreen() {
     setIsProcessing(true);
 
     try {
-      const result = await processProductFromData(
-        data.upc,
-        data.name,
-        data.ingredients,
-        data.brand,
-        undefined,
-        "manual",
-      );
+      const result = await processProductFromData({
+        upc: data.upc,
+        name: data.name,
+        ingredientsText: data.ingredients,
+        brand: data.brand,
+        imageUrl: undefined,
+        source: "manual",
+      });
 
       if (result.success && result.product) {
         setScannedProduct(result.product);
