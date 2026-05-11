@@ -11,13 +11,49 @@ import type {
   SourceProvenance,
 } from "@/types";
 
-let classificationRules: ClassificationRule[] = [];
-let maskingTerms: MaskingTerm[] = [];
+interface CompiledRule extends ClassificationRule {
+  compiledPattern: RegExp;
+}
+
+interface ProcessedMaskingTerm extends MaskingTerm {
+  lowerTerm: string;
+}
+
+let classificationRules: CompiledRule[] = [];
+let maskingTerms: ProcessedMaskingTerm[] = [];
 const canonicalIngredients: Map<string, CanonicalIngredient> = new Map();
 
+const VAGUE_PHRASES = [
+  {
+    pattern: /and\/or/i,
+    reason: "Ingredient composition is variable and unspecified",
+  },
+  {
+    pattern: /one or more of/i,
+    reason: "Multiple possible ingredients, exact composition unknown",
+  },
+  {
+    pattern: /may contain/i,
+    reason: "Potential cross-contamination or variable formulation",
+  },
+  {
+    pattern: /less than \d+%/i,
+    reason: "Minor ingredients may not be fully disclosed",
+  },
+];
+
 export async function initializeClassifier(): Promise<void> {
-  classificationRules = await db.classificationRules.toArray();
-  maskingTerms = await db.maskingTerms.toArray();
+  const rules = await db.classificationRules.toArray();
+  classificationRules = rules.map((rule) => ({
+    ...rule,
+    compiledPattern: new RegExp(rule.ingredientPattern, "i"),
+  }));
+
+  const terms = await db.maskingTerms.toArray();
+  maskingTerms = terms.map((term) => ({
+    ...term,
+    lowerTerm: term.term.toLowerCase(),
+  }));
 
   const ingredients = await db.canonicalIngredients.toArray();
   canonicalIngredients.clear();
@@ -51,7 +87,7 @@ export function classifyIngredient(
       // Only apply rules for enabled profiles
       if (!restrictionSettings[rule.profile]) continue;
 
-      const pattern = new RegExp(rule.ingredientPattern, "i");
+      const pattern = rule.compiledPattern;
       if (pattern.test(originalText) || pattern.test(canonicalName)) {
         safetyStatus = rule.safetyStatus;
         safetyReason = rule.reason;
@@ -107,7 +143,7 @@ function checkForMasking(text: string): {
   const lowerText = text.toLowerCase();
 
   for (const term of maskingTerms) {
-    if (lowerText.includes(term.term.toLowerCase())) {
+    if (lowerText.includes(term.lowerTerm)) {
       return {
         isMasking: true,
         reason: term.reason,
@@ -117,26 +153,7 @@ function checkForMasking(text: string): {
     }
   }
 
-  const vaguePhrases = [
-    {
-      pattern: /and\/or/i,
-      reason: "Ingredient composition is variable and unspecified",
-    },
-    {
-      pattern: /one or more of/i,
-      reason: "Multiple possible ingredients, exact composition unknown",
-    },
-    {
-      pattern: /may contain/i,
-      reason: "Potential cross-contamination or variable formulation",
-    },
-    {
-      pattern: /less than \d+%/i,
-      reason: "Minor ingredients may not be fully disclosed",
-    },
-  ];
-
-  for (const phrase of vaguePhrases) {
+  for (const phrase of VAGUE_PHRASES) {
     if (phrase.pattern.test(text)) {
       return {
         isMasking: true,
