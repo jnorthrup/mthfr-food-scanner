@@ -1,7 +1,9 @@
+import { describe, it, expect, mock, beforeEach } from 'bun:test';
 import { 
   normalizeUPC, 
   validateUPC,
-  generateMockProduct 
+  generateMockProduct,
+  fetchFromOpenFoodFacts
 } from '../src/lib/api/product-api';
 
 describe('Product API', () => {
@@ -127,6 +129,38 @@ describe('API Integration Points', () => {
       
       expect(mockResponse.items.length).toBe(1);
       expect(mockResponse.items[0].title).toBeTruthy();
+    });
+  });
+
+  describe('fetchFromOpenFoodFacts User-Agent', () => {
+    const originalEnv = process.env;
+
+    beforeEach(() => {
+      process.env = { ...originalEnv };
+      global.fetch = mock(() =>
+        Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({ status: 1, product: {} }),
+        })
+      ) as any;
+    });
+
+    it('should use generic User-Agent when environment variable is not set', async () => {
+      delete process.env.NEXT_PUBLIC_OFF_CONTACT_EMAIL;
+
+      await fetchFromOpenFoodFacts('012345678905');
+
+      const fetchCall = (global.fetch as any).mock.calls[0];
+      expect(fetchCall[1].headers['User-Agent']).toBe('MTHFRFoodScanner/1.0');
+    });
+
+    it('should use contact email in User-Agent when environment variable is set', async () => {
+      process.env.NEXT_PUBLIC_OFF_CONTACT_EMAIL = 'security@example.com';
+
+      await fetchFromOpenFoodFacts('012345678905');
+
+      const fetchCall = (global.fetch as any).mock.calls[0];
+      expect(fetchCall[1].headers['User-Agent']).toBe('MTHFRFoodScanner/1.0 (security@example.com)');
     });
   });
 });
