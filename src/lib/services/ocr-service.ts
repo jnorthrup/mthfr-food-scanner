@@ -10,13 +10,7 @@ export async function initializeOCR(): Promise<void> {
 
   try {
     const Tesseract = await import("tesseract.js");
-    tesseractWorker = await Tesseract.createWorker("eng", 1, {
-      logger: (m) => {
-        if (m.status === "recognizing text") {
-          console.log(`OCR Progress: ${Math.round(m.progress * 100)}%`);
-        }
-      },
-    });
+    tesseractWorker = await Tesseract.createWorker("eng", 1);
   } catch (error) {
     console.error("Failed to initialize OCR:", error);
   } finally {
