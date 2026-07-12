@@ -44,7 +44,10 @@ async function fetchFromOpenFoodFacts(
       source: "open_food_facts",
     };
   } catch (error) {
-    console.error("Open Food Facts API error:", error);
+    console.error(
+      "Open Food Facts API error:",
+      error instanceof Error ? error.message : error,
+    );
     return null;
   }
 }
@@ -83,7 +86,10 @@ async function fetchFromUPCItemDB(
       source: "upc_item_db",
     };
   } catch (error) {
-    console.error("UPC Item DB API error:", error);
+    console.error(
+      "UPC Item DB API error:",
+      error instanceof Error ? error.message : error,
+    );
     return null;
   }
 }
@@ -132,7 +138,10 @@ export async function lookupProductByUPC(
         };
       }
     } catch (error) {
-      console.error(`Error fetching from ${provider.name}:`, error);
+      console.error(
+        `Error fetching from ${provider.name}:`,
+        error instanceof Error ? error.message : error,
+      );
     }
   }
 

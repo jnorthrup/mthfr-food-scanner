@@ -147,7 +147,10 @@ export async function processProductFromData(
       source,
     };
   } catch (error) {
-    console.error("Error processing product:", error);
+    console.error(
+      "Error processing product:",
+      error instanceof Error ? error.message : error,
+    );
     return {
       success: false,
       product: null,
@@ -202,7 +205,10 @@ export async function updateProductIngredients(
       source,
     };
   } catch (error) {
-    console.error("Error updating product:", error);
+    console.error(
+      "Error updating product:",
+      error instanceof Error ? error.message : error,
+    );
     return {
       success: false,
       product: null,

@@ -18,7 +18,10 @@ export async function initializeOCR(): Promise<void> {
       },
     });
   } catch (error) {
-    console.error("Failed to initialize OCR:", error);
+    console.error(
+      "Failed to initialize OCR:",
+      error instanceof Error ? error.message : error,
+    );
   } finally {
     isInitializing = false;
   }
@@ -48,7 +51,10 @@ export async function performOCR(
       ingredients,
     };
   } catch (error) {
-    console.error("OCR failed:", error);
+    console.error(
+      "OCR failed:",
+      error instanceof Error ? error.message : error,
+    );
     throw new Error("Failed to extract text from image");
   }
 }
@@ -154,7 +160,10 @@ export async function performOCRWithProgress(
       ingredients,
     };
   } catch (error) {
-    console.error("OCR failed:", error);
+    console.error(
+      "OCR failed:",
+      error instanceof Error ? error.message : error,
+    );
     throw new Error("Failed to extract text from image");
   }
 }
