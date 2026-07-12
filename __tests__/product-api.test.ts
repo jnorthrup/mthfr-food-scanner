@@ -1,7 +1,10 @@
+import { describe, it, expect, mock, beforeEach } from "bun:test";
 import { 
   normalizeUPC, 
   validateUPC,
-  generateMockProduct 
+  generateMockProduct,
+  fetchFromUPCItemDB,
+  fetchFromOpenFoodFacts
 } from '../src/lib/api/product-api';
 
 describe('Product API', () => {
@@ -88,45 +91,117 @@ describe('Product API', () => {
 });
 
 describe('API Integration Points', () => {
-  describe('Open Food Facts API format', () => {
-    it('should expect status field in response', () => {
-      const mockResponse = {
+  beforeEach(() => {
+    // Reset fetch mock before each test
+    global.fetch = mock(() => Promise.resolve(new Response()));
+    // Mock console.error to keep test output clean
+    mock.module('console', () => ({
+      error: mock(() => {}),
+    }));
+    // Alternatively, just spy on it if it's already available
+    global.console.error = mock(() => {});
+  });
+
+  describe('fetchFromOpenFoodFacts', () => {
+    it('should return mapped product on success', async () => {
+      const mockData = {
         status: 1,
         product: {
           product_name: 'Test Product',
+          brands: 'Test Brand',
           ingredients_text: 'Water, Sugar',
+          image_front_url: 'http://example.com/image.jpg'
         },
       };
+
+      global.fetch = mock(() =>
+        Promise.resolve(new Response(JSON.stringify(mockData), { status: 200 }))
+      );
+
+      const result = await fetchFromOpenFoodFacts('123456789012');
       
-      expect(mockResponse.status).toBe(1);
-      expect(mockResponse.product.product_name).toBeTruthy();
+      expect(result).not.toBeNull();
+      expect(result?.name).toBe('Test Product');
+      expect(result?.brand).toBe('Test Brand');
+      expect(result?.ingredients).toBe('Water, Sugar');
+      expect(result?.source).toBe('open_food_facts');
     });
 
-    it('should handle product not found response', () => {
-      const notFoundResponse = {
-        status: 0,
-        status_verbose: 'product not found',
-      };
-      
-      expect(notFoundResponse.status).toBe(0);
+    it('should return null when product not found (status 0)', async () => {
+      const mockData = { status: 0 };
+      global.fetch = mock(() =>
+        Promise.resolve(new Response(JSON.stringify(mockData), { status: 200 }))
+      );
+
+      const result = await fetchFromOpenFoodFacts('123456789012');
+      expect(result).toBeNull();
+    });
+
+    it('should return null on non-200 response', async () => {
+      global.fetch = mock(() =>
+        Promise.resolve(new Response(null, { status: 404 }))
+      );
+
+      const result = await fetchFromOpenFoodFacts('123456789012');
+      expect(result).toBeNull();
+    });
+
+    it('should return null on fetch error', async () => {
+      global.fetch = mock(() => Promise.reject(new Error('Network error')));
+
+      const result = await fetchFromOpenFoodFacts('123456789012');
+      expect(result).toBeNull();
     });
   });
 
-  describe('UPC Item DB API format', () => {
-    it('should expect items array in response', () => {
-      const mockResponse = {
-        code: 'OK',
-        total: 1,
-        items: [
-          {
-            title: 'Test Product',
-            brand: 'Test Brand',
-          },
-        ],
+  describe('fetchFromUPCItemDB', () => {
+    it('should return mapped product on success', async () => {
+      const mockData = {
+        items: [{
+          title: 'UPC Product',
+          brand: 'UPC Brand',
+          description: 'Ingredients list',
+          images: ['http://example.com/upc.jpg']
+        }]
       };
+
+      global.fetch = mock(() =>
+        Promise.resolve(new Response(JSON.stringify(mockData), { status: 200 }))
+      );
+
+      const result = await fetchFromUPCItemDB('123456789012');
       
-      expect(mockResponse.items.length).toBe(1);
-      expect(mockResponse.items[0].title).toBeTruthy();
+      expect(result).not.toBeNull();
+      expect(result?.name).toBe('UPC Product');
+      expect(result?.brand).toBe('UPC Brand');
+      expect(result?.ingredients).toBe('Ingredients list');
+      expect(result?.source).toBe('upc_item_db');
+    });
+
+    it('should return null when no items found', async () => {
+      const mockData = { items: [] };
+      global.fetch = mock(() =>
+        Promise.resolve(new Response(JSON.stringify(mockData), { status: 200 }))
+      );
+
+      const result = await fetchFromUPCItemDB('123456789012');
+      expect(result).toBeNull();
+    });
+
+    it('should return null on non-200 response', async () => {
+      global.fetch = mock(() =>
+        Promise.resolve(new Response(null, { status: 429 }))
+      );
+
+      const result = await fetchFromUPCItemDB('123456789012');
+      expect(result).toBeNull();
+    });
+
+    it('should return null on fetch error', async () => {
+      global.fetch = mock(() => Promise.reject(new Error('Network error')));
+
+      const result = await fetchFromUPCItemDB('123456789012');
+      expect(result).toBeNull();
     });
   });
 });
