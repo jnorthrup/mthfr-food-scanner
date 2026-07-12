@@ -190,8 +190,7 @@ export async function updateProductIngredients(
       ingredients: JSON.parse(JSON.stringify(classifiedIngredients)),
       updatedAt: new Date(),
     };
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (db.products.update as any)(productId, updateData);
+    await db.products.update(productId, updateData);
 
     const updatedProduct = await db.products.get(productId);
 
@@ -248,8 +247,7 @@ export async function toggleProductFavorite(
   if (!product) return false;
 
   const newFavoriteStatus = !product.isFavorite;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  await (db.products.update as any)(productId, {
+  await db.products.update(productId, {
     isFavorite: newFavoriteStatus,
   });
 
