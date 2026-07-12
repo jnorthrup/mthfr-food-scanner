@@ -53,7 +53,7 @@ export async function performOCR(
   }
 }
 
-function extractIngredientsFromOCR(text: string): string[] {
+export function extractIngredientsFromOCR(text: string): string[] {
   const ingredientPatterns = [
     /ingredients?[:\s]*([\s\S]+?)(?:\.|nutrition|allergen|contains|manufactured|distributed|$)/i,
     /contains?[:\s]*([\s\S]+?)(?:\.|nutrition|allergen|manufactured|distributed|$)/i,
@@ -70,7 +70,7 @@ function extractIngredientsFromOCR(text: string): string[] {
   return parseOCRIngredients(text);
 }
 
-function parseOCRIngredients(text: string): string[] {
+export function parseOCRIngredients(text: string): string[] {
   let cleaned = text
     .replace(/[\n\r]+/g, " ")
     .replace(/\s+/g, " ")
