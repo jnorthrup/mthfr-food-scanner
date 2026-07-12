@@ -8,7 +8,7 @@ interface ProductAPIConfig {
 
 const OPEN_FOOD_FACTS_BASE = "https://world.openfoodfacts.org/api/v2";
 
-async function fetchFromOpenFoodFacts(
+export async function fetchFromOpenFoodFacts(
   upc: string,
 ): Promise<APIProductResponse | null> {
   try {
@@ -49,7 +49,7 @@ async function fetchFromOpenFoodFacts(
   }
 }
 
-async function fetchFromUPCItemDB(
+export async function fetchFromUPCItemDB(
   upc: string,
 ): Promise<APIProductResponse | null> {
   try {
