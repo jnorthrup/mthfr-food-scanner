@@ -1875,6 +1875,10 @@ export const MUTATION_CONTRAINDICATIONS: MutationContraindication[] = [
   },
 ];
 
+const CONTRAINDICATION_PATTERNS = new Map<string, RegExp>(
+  MUTATION_CONTRAINDICATIONS.map((c) => [c.ingredientPattern, new RegExp(c.ingredientPattern, "i")]),
+);
+
 export function getMutationById(id: string): MutationDefinition | undefined {
   return KNOWN_MUTATIONS.find((m) => m.id === id);
 }
@@ -1895,8 +1899,8 @@ export function checkIngredientContraindication(
     const contraindications = getContraindicationsForMutation(userMutation.mutationId);
 
     for (const contraindication of contraindications) {
-      const pattern = new RegExp(contraindication.ingredientPattern, "i");
-      if (pattern.test(lowerIngredient)) {
+      const pattern = CONTRAINDICATION_PATTERNS.get(contraindication.ingredientPattern);
+      if (pattern?.test(lowerIngredient)) {
         return {
           contraindication,
           mutationId: userMutation.mutationId,
