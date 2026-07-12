@@ -221,20 +221,26 @@ export async function getProductHistory(limit = 50): Promise<Product[]> {
     .limit(limit)
     .toArray();
 
-  const products: Product[] = [];
+  const uniqueEntries: typeof history = [];
   const seen = new Set<number>();
 
   for (const entry of history) {
     if (!seen.has(entry.productId)) {
-      const product = await db.products.get(entry.productId);
-      if (product) {
-        products.push({ ...product, lastScannedAt: entry.scannedAt });
-        seen.add(entry.productId);
-      }
+      seen.add(entry.productId);
+      uniqueEntries.push(entry);
     }
   }
 
-  return products;
+  const productIds = uniqueEntries.map((e) => e.productId);
+  const productsData = await db.products.where("id").anyOf(productIds).toArray();
+  const productMap = new Map(productsData.map((p) => [p.id, p]));
+
+  return uniqueEntries
+    .map((entry) => {
+      const product = productMap.get(entry.productId);
+      return product ? { ...product, lastScannedAt: entry.scannedAt } : null;
+    })
+    .filter((p): p is Product => p !== null);
 }
 
 export async function getFavoriteProducts(): Promise<Product[]> {
