@@ -11,6 +11,10 @@ const OPEN_FOOD_FACTS_BASE = "https://world.openfoodfacts.org/api/v2";
 async function fetchFromOpenFoodFacts(
   upc: string,
 ): Promise<APIProductResponse | null> {
+  if (!/^\d{8,14}$/.test(upc)) {
+    return null;
+  }
+
   try {
     const userAgentEmail = process.env.NEXT_PUBLIC_OFF_CONTACT_EMAIL;
     const userAgent = userAgentEmail
@@ -57,6 +61,10 @@ async function fetchFromOpenFoodFacts(
 async function fetchFromUPCItemDB(
   upc: string,
 ): Promise<APIProductResponse | null> {
+  if (!/^\d{8,14}$/.test(upc)) {
+    return null;
+  }
+
   try {
     const response = await fetch(
       `https://api.upcitemdb.com/prod/trial/lookup?upc=${upc}`,
@@ -117,6 +125,17 @@ export interface ProductLookupResult {
 export async function lookupProductByUPC(
   upc: string,
 ): Promise<ProductLookupResult> {
+  const validation = validateUPC(upc);
+  if (!validation.valid) {
+    return {
+      success: false,
+      product: null,
+      source: "api",
+      error: validation.message || "Invalid UPC",
+      searchedAPIs: [],
+    };
+  }
+
   const normalizedUPC = normalizeUPC(upc);
   const searchedAPIs = API_PROVIDERS.map((p) => p.name);
 

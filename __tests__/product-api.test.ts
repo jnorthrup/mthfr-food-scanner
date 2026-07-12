@@ -1,8 +1,10 @@
 import { 
   normalizeUPC, 
   validateUPC,
-  generateMockProduct 
+  generateMockProduct,
+  lookupProductByUPC
 } from '../src/lib/api/product-api';
+import { describe, it, expect, mock, beforeEach } from 'bun:test';
 
 describe('Product API', () => {
   describe('normalizeUPC', () => {
@@ -83,6 +85,36 @@ describe('Product API', () => {
       const product = generateMockProduct('012345678905');
       expect(product.ingredients).toContain('Water');
       expect(product.ingredients).toContain('Folic Acid');
+    });
+  });
+
+  describe('lookupProductByUPC security', () => {
+    beforeEach(() => {
+      // @ts-ignore - Mocking global fetch
+      global.fetch = mock(() =>
+        Promise.resolve({
+          ok: false,
+          json: () => Promise.resolve({}),
+        })
+      );
+    });
+
+    it('should handle path traversal attempts safely', async () => {
+      // normalizeUPC strips non-numeric, so ../../12345678 becomes 12345678
+      // but we want to ensure it doesn't cause issues
+      const result = await lookupProductByUPC('../../../12345678');
+      expect(result.success).toBe(false);
+    });
+
+    it('should handle extremely long inputs', async () => {
+      const longInput = '1'.repeat(1000);
+      const result = await lookupProductByUPC(longInput);
+      expect(result.success).toBe(false);
+    });
+
+    it('should handle empty or whitespace inputs', async () => {
+      const result = await lookupProductByUPC('   ');
+      expect(result.success).toBe(false);
     });
   });
 });
