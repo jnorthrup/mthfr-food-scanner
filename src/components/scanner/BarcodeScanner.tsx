@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect } from "react";
-import { Html5QrcodeScanner, Html5QrcodeSupportedFormats } from "html5-qrcode";
+import { useEffect, useRef } from "react";
+import { Html5Qrcode, Html5QrcodeSupportedFormats } from "html5-qrcode";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -11,62 +11,100 @@ interface BarcodeScannerProps {
   isActive?: boolean;
 }
 
+const SUPPORTED_FORMATS = [
+  Html5QrcodeSupportedFormats.UPC_A,
+  Html5QrcodeSupportedFormats.UPC_E,
+  Html5QrcodeSupportedFormats.UPC_EAN_EXTENSION,
+  Html5QrcodeSupportedFormats.EAN_13,
+  Html5QrcodeSupportedFormats.EAN_8,
+  Html5QrcodeSupportedFormats.CODE_128,
+  Html5QrcodeSupportedFormats.CODE_39,
+];
+
 export function BarcodeScanner({
   onScan,
   onClose,
   isActive = true,
 }: BarcodeScannerProps) {
+  const scannerRef = useRef<Html5Qrcode | null>(null);
+  const onScanRef = useRef(onScan);
+
+  // Update the ref whenever the onScan callback changes to avoid restarting the scanner
   useEffect(() => {
-    // Only mount if active
+    onScanRef.current = onScan;
+  }, [onScan]);
+
+  useEffect(() => {
     if (!isActive) return;
 
-    let scanner: Html5QrcodeScanner | null = null;
+    let isMounted = true;
+    const elementId = "qr-reader";
 
-    // Slight timeout ensures the DOM node exists before mounting
-    const timeout = setTimeout(() => {
-      const formatsToSupport = [
-        Html5QrcodeSupportedFormats.UPC_A,
-        Html5QrcodeSupportedFormats.UPC_E,
-        Html5QrcodeSupportedFormats.UPC_EAN_EXTENSION,
-        Html5QrcodeSupportedFormats.EAN_13,
-        Html5QrcodeSupportedFormats.EAN_8,
-        Html5QrcodeSupportedFormats.CODE_128,
-        Html5QrcodeSupportedFormats.CODE_39,
-      ];
+    // Initialize scanner
+    const startScanner = async () => {
+      try {
+        // Ensure the DOM element is ready and has dimensions (important for Dialog animations)
+        let element = document.getElementById(elementId);
+        let attempts = 0;
 
-      scanner = new Html5QrcodeScanner(
-        "qr-reader",
-        {
+        while ((!element || element.clientWidth === 0) && attempts < 10) {
+          await new Promise((resolve) => setTimeout(resolve, 100));
+          element = document.getElementById(elementId);
+          attempts++;
+        }
+
+        if (!element || !isMounted) return;
+
+        // Create new instance
+        const html5QrCode = new Html5Qrcode(elementId);
+        scannerRef.current = html5QrCode;
+
+        const config = {
           fps: 10,
           qrbox: { width: 300, height: 150 },
           aspectRatio: 16 / 9,
           // Explictly optimize engine for UPC and EAN barcodes
-          formatsToSupport: formatsToSupport,
-        },
-        /* verbose= */ false,
-      );
+          formatsToSupport: SUPPORTED_FORMATS,
+        };
 
-      scanner.render(
-        (decodedText) => {
-          // Success callback
-          onScan(decodedText);
-        },
-        (errorMessage) => {
-          // Failure callback is noisy, we typically ignore it for sweeps
-        },
-      );
-    }, 100);
+        // Ensure camera is fully ready before scanning
+        // html5QrCode.start returns a promise that resolves once the camera is ready and video is playing
+        await html5QrCode.start(
+          { facingMode: "environment" },
+          config,
+          (decodedText) => {
+            onScanRef.current(decodedText);
+          },
+          () => {
+            // onScanFailure - noisy, we typically ignore it for sweeps
+          }
+        );
 
-    return () => {
-      clearTimeout(timeout);
-      if (scanner) {
-        // Safe cleanup
-        scanner
-          .clear()
-          .catch((err) => console.error("Failed to clear scanner", err));
+        // If the component unmounted while start() was pending, stop the scanner immediately
+        if (!isMounted) {
+          html5QrCode.stop().catch((err) => console.error("Failed to stop scanner after unmount", err));
+        }
+      } catch (err) {
+        // Only log error if we're still mounted
+        if (isMounted) {
+          console.error("Failed to start scanner", err);
+        }
       }
     };
-  }, [isActive, onScan]);
+
+    startScanner();
+
+    return () => {
+      isMounted = false;
+      if (scannerRef.current) {
+        const scanner = scannerRef.current;
+        scannerRef.current = null;
+        if (scanner.isScanning) {
+          scanner.stop().catch((err) => console.error("Failed to stop scanner", err));
+        }
+      }
+    };
+  }, [isActive]);
 
   return (
     <div className="relative w-full h-full flex flex-col bg-black">
