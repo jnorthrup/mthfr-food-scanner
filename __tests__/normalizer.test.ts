@@ -1,7 +1,9 @@
 import { 
   parseIngredientsList, 
-  normalizeIngredientText 
+  normalizeIngredientText,
+  calculateOverallConfidence
 } from '../src/lib/engine/normalizer';
+import type { NormalizationResult } from '../src/types';
 
 describe('Ingredient Normalizer', () => {
   describe('parseIngredientsList', () => {
@@ -60,6 +62,37 @@ describe('Ingredient Normalizer', () => {
       const result = normalizeIngredientText('sugar 5%');
       expect(result).not.toContain('5%');
     });
+  });
+});
+
+describe('calculateOverallConfidence', () => {
+  it('should return 0 for an empty list', () => {
+    expect(calculateOverallConfidence([])).toBe(0);
+  });
+
+  it('should return the confidence of a single item', () => {
+    const results: NormalizationResult[] = [
+      { originalText: 'A', normalizedName: 'a', canonicalName: 'a', confidence: 0.8 }
+    ];
+    expect(calculateOverallConfidence(results)).toBe(0.8);
+  });
+
+  it('should calculate the average confidence of multiple items', () => {
+    const results: NormalizationResult[] = [
+      { originalText: 'A', normalizedName: 'a', canonicalName: 'a', confidence: 0.8 },
+      { originalText: 'B', normalizedName: 'b', canonicalName: 'b', confidence: 0.6 },
+      { originalText: 'C', normalizedName: 'c', canonicalName: 'c', confidence: 1.0 }
+    ];
+    // (0.8 + 0.6 + 1.0) / 3 = 2.4 / 3 = 0.8
+    expect(calculateOverallConfidence(results)).toBeCloseTo(0.8);
+  });
+
+  it('should handle zero confidence items', () => {
+    const results: NormalizationResult[] = [
+      { originalText: 'A', normalizedName: 'a', canonicalName: 'a', confidence: 0 },
+      { originalText: 'B', normalizedName: 'b', canonicalName: 'b', confidence: 0.5 }
+    ];
+    expect(calculateOverallConfidence(results)).toBe(0.25);
   });
 });
 
