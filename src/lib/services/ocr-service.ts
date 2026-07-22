@@ -10,15 +10,9 @@ export async function initializeOCR(): Promise<void> {
 
   try {
     const Tesseract = await import("tesseract.js");
-    tesseractWorker = await Tesseract.createWorker("eng", 1, {
-      logger: (m) => {
-        if (m.status === "recognizing text") {
-          console.log(`OCR Progress: ${Math.round(m.progress * 100)}%`);
-        }
-      },
-    });
-  } catch (error) {
-    console.error("Failed to initialize OCR:", error);
+    tesseractWorker = await Tesseract.createWorker("eng", 1);
+  } catch (_error) {
+    // Error during initialization is handled by checking tesseractWorker existence later
   } finally {
     isInitializing = false;
   }
@@ -47,8 +41,7 @@ export async function performOCR(
       confidence,
       ingredients,
     };
-  } catch (error) {
-    console.error("OCR failed:", error);
+  } catch (_error) {
     throw new Error("Failed to extract text from image");
   }
 }
@@ -153,8 +146,7 @@ export async function performOCRWithProgress(
       confidence,
       ingredients,
     };
-  } catch (error) {
-    console.error("OCR failed:", error);
+  } catch (_error) {
     throw new Error("Failed to extract text from image");
   }
 }
