@@ -455,7 +455,7 @@ async function seedClassificationRules(): Promise<void> {
       createdAt: new Date(),
     },
     {
-      ingredientPattern: "enriched|fortified",
+      ingredientPattern: "enriched",
       safetyStatus: "unsafe",
       reason:
         "Enriched and fortified foods typically contain synthetic folic acid.",
@@ -466,7 +466,18 @@ async function seedClassificationRules(): Promise<void> {
       createdAt: new Date(),
     },
     {
-      ingredientPattern: "methylfolate|5-mthf|l-methylfolate",
+      ingredientPattern: "fortified",
+      safetyStatus: "unsafe",
+      reason:
+        "Enriched and fortified foods typically contain synthetic folic acid.",
+      evidence:
+        "US fortification mandate uses synthetic folic acid in grain products.",
+      profile: "mthfr",
+      version: 1,
+      createdAt: new Date(),
+    },
+    {
+      ingredientPattern: "methylfolate",
       safetyStatus: "safe",
       reason: "Active form of folate that bypasses MTHFR enzyme.",
       evidence: "Direct cellular uptake without conversion requirement.",
@@ -475,7 +486,25 @@ async function seedClassificationRules(): Promise<void> {
       createdAt: new Date(),
     },
     {
-      ingredientPattern: "methylcobalamin|adenosylcobalamin|hydroxocobalamin",
+      ingredientPattern: "5-mthf",
+      safetyStatus: "safe",
+      reason: "Active form of folate that bypasses MTHFR enzyme.",
+      evidence: "Direct cellular uptake without conversion requirement.",
+      profile: "mthfr",
+      version: 1,
+      createdAt: new Date(),
+    },
+    {
+      ingredientPattern: "l-methylfolate",
+      safetyStatus: "safe",
+      reason: "Active form of folate that bypasses MTHFR enzyme.",
+      evidence: "Direct cellular uptake without conversion requirement.",
+      profile: "mthfr",
+      version: 1,
+      createdAt: new Date(),
+    },
+    {
+      ingredientPattern: "methylcobalamin",
       safetyStatus: "safe",
       reason: "Active or easily converted forms of vitamin B12.",
       evidence: "Preferred B12 forms for MTHFR-affected individuals.",
@@ -484,7 +513,43 @@ async function seedClassificationRules(): Promise<void> {
       createdAt: new Date(),
     },
     {
-      ingredientPattern: "msg|monosodium glutamate|glutamate",
+      ingredientPattern: "adenosylcobalamin",
+      safetyStatus: "safe",
+      reason: "Active or easily converted forms of vitamin B12.",
+      evidence: "Preferred B12 forms for MTHFR-affected individuals.",
+      profile: "mthfr",
+      version: 1,
+      createdAt: new Date(),
+    },
+    {
+      ingredientPattern: "hydroxocobalamin",
+      safetyStatus: "safe",
+      reason: "Active or easily converted forms of vitamin B12.",
+      evidence: "Preferred B12 forms for MTHFR-affected individuals.",
+      profile: "mthfr",
+      version: 1,
+      createdAt: new Date(),
+    },
+    {
+      ingredientPattern: "msg",
+      safetyStatus: "unsafe",
+      reason: "Excitotoxin that may affect neurological function.",
+      evidence: "May deplete glutathione and affect detoxification pathways.",
+      profile: "mthfr",
+      version: 1,
+      createdAt: new Date(),
+    },
+    {
+      ingredientPattern: "monosodium glutamate",
+      safetyStatus: "unsafe",
+      reason: "Excitotoxin that may affect neurological function.",
+      evidence: "May deplete glutathione and affect detoxification pathways.",
+      profile: "mthfr",
+      version: 1,
+      createdAt: new Date(),
+    },
+    {
+      ingredientPattern: "glutamate",
       safetyStatus: "unsafe",
       reason: "Excitotoxin that may affect neurological function.",
       evidence: "May deplete glutathione and affect detoxification pathways.",
@@ -494,7 +559,7 @@ async function seedClassificationRules(): Promise<void> {
     },
     // EU Standards Profile
     {
-      ingredientPattern: "titanium dioxide|e171",
+      ingredientPattern: "titanium dioxide",
       safetyStatus: "unsafe",
       reason:
         "Banned in the EU due to concerns about genotoxicity and its ability to accumulate in the body.",
@@ -503,7 +568,16 @@ async function seedClassificationRules(): Promise<void> {
       createdAt: new Date(),
     },
     {
-      ingredientPattern: "potassium bromate|e924",
+      ingredientPattern: "e171",
+      safetyStatus: "unsafe",
+      reason:
+        "Banned in the EU due to concerns about genotoxicity and its ability to accumulate in the body.",
+      profile: "eu_standards",
+      version: 1,
+      createdAt: new Date(),
+    },
+    {
+      ingredientPattern: "potassium bromate",
       safetyStatus: "unsafe",
       reason:
         "Banned in the EU, Canada, and other countries. Classified as a possible carcinogen.",
@@ -512,7 +586,16 @@ async function seedClassificationRules(): Promise<void> {
       createdAt: new Date(),
     },
     {
-      ingredientPattern: "azodicarbonamide|e927a",
+      ingredientPattern: "e924",
+      safetyStatus: "unsafe",
+      reason:
+        "Banned in the EU, Canada, and other countries. Classified as a possible carcinogen.",
+      profile: "eu_standards",
+      version: 1,
+      createdAt: new Date(),
+    },
+    {
+      ingredientPattern: "azodicarbonamide",
       safetyStatus: "unsafe",
       reason:
         "Banned in the EU and Australia. May break down into semicarbazide, which is a carcinogen.",
@@ -521,7 +604,16 @@ async function seedClassificationRules(): Promise<void> {
       createdAt: new Date(),
     },
     {
-      ingredientPattern: "brominated vegetable oil|bvo",
+      ingredientPattern: "e927a",
+      safetyStatus: "unsafe",
+      reason:
+        "Banned in the EU and Australia. May break down into semicarbazide, which is a carcinogen.",
+      profile: "eu_standards",
+      version: 1,
+      createdAt: new Date(),
+    },
+    {
+      ingredientPattern: "brominated vegetable oil",
       safetyStatus: "unsafe",
       reason:
         "Banned in the EU. Contains bromine, which can accumulate in the body and lead to neurological issues.",
@@ -530,7 +622,16 @@ async function seedClassificationRules(): Promise<void> {
       createdAt: new Date(),
     },
     {
-      ingredientPattern: "yellow 5|tartrazine|e102",
+      ingredientPattern: "bvo",
+      safetyStatus: "unsafe",
+      reason:
+        "Banned in the EU. Contains bromine, which can accumulate in the body and lead to neurological issues.",
+      profile: "eu_standards",
+      version: 1,
+      createdAt: new Date(),
+    },
+    {
+      ingredientPattern: "yellow 5",
       safetyStatus: "unknown",
       reason:
         "Requires a warning label in the EU. May cause hyperactivity in children and allergic reactions.",
@@ -539,7 +640,25 @@ async function seedClassificationRules(): Promise<void> {
       createdAt: new Date(),
     },
     {
-      ingredientPattern: "yellow 6|sunset yellow|e110",
+      ingredientPattern: "tartrazine",
+      safetyStatus: "unknown",
+      reason:
+        "Requires a warning label in the EU. May cause hyperactivity in children and allergic reactions.",
+      profile: "eu_standards",
+      version: 1,
+      createdAt: new Date(),
+    },
+    {
+      ingredientPattern: "e102",
+      safetyStatus: "unknown",
+      reason:
+        "Requires a warning label in the EU. May cause hyperactivity in children and allergic reactions.",
+      profile: "eu_standards",
+      version: 1,
+      createdAt: new Date(),
+    },
+    {
+      ingredientPattern: "yellow 6",
       safetyStatus: "unknown",
       reason:
         "Requires a warning label in the EU. May cause hyperactivity in children.",
@@ -548,7 +667,7 @@ async function seedClassificationRules(): Promise<void> {
       createdAt: new Date(),
     },
     {
-      ingredientPattern: "red 40|allura red|e129",
+      ingredientPattern: "sunset yellow",
       safetyStatus: "unknown",
       reason:
         "Requires a warning label in the EU. May cause hyperactivity in children.",
@@ -557,7 +676,52 @@ async function seedClassificationRules(): Promise<void> {
       createdAt: new Date(),
     },
     {
-      ingredientPattern: "propylparaben|e216",
+      ingredientPattern: "e110",
+      safetyStatus: "unknown",
+      reason:
+        "Requires a warning label in the EU. May cause hyperactivity in children.",
+      profile: "eu_standards",
+      version: 1,
+      createdAt: new Date(),
+    },
+    {
+      ingredientPattern: "red 40",
+      safetyStatus: "unknown",
+      reason:
+        "Requires a warning label in the EU. May cause hyperactivity in children.",
+      profile: "eu_standards",
+      version: 1,
+      createdAt: new Date(),
+    },
+    {
+      ingredientPattern: "allura red",
+      safetyStatus: "unknown",
+      reason:
+        "Requires a warning label in the EU. May cause hyperactivity in children.",
+      profile: "eu_standards",
+      version: 1,
+      createdAt: new Date(),
+    },
+    {
+      ingredientPattern: "e129",
+      safetyStatus: "unknown",
+      reason:
+        "Requires a warning label in the EU. May cause hyperactivity in children.",
+      profile: "eu_standards",
+      version: 1,
+      createdAt: new Date(),
+    },
+    {
+      ingredientPattern: "propylparaben",
+      safetyStatus: "unsafe",
+      reason:
+        "Banned in the EU as a food additive due to endocrine-disrupting potential.",
+      profile: "eu_standards",
+      version: 1,
+      createdAt: new Date(),
+    },
+    {
+      ingredientPattern: "e216",
       safetyStatus: "unsafe",
       reason:
         "Banned in the EU as a food additive due to endocrine-disrupting potential.",
@@ -567,7 +731,25 @@ async function seedClassificationRules(): Promise<void> {
     },
     // Genetic Mutations Profile
     {
-      ingredientPattern: "fava bean|broad bean|vicia faba",
+      ingredientPattern: "fava bean",
+      safetyStatus: "unsafe",
+      reason:
+        "Can cause hemolytic anemia in individuals with G6PD deficiency (Favism).",
+      profile: "genetic_mutations",
+      version: 1,
+      createdAt: new Date(),
+    },
+    {
+      ingredientPattern: "broad bean",
+      safetyStatus: "unsafe",
+      reason:
+        "Can cause hemolytic anemia in individuals with G6PD deficiency (Favism).",
+      profile: "genetic_mutations",
+      version: 1,
+      createdAt: new Date(),
+    },
+    {
+      ingredientPattern: "vicia faba",
       safetyStatus: "unsafe",
       reason:
         "Can cause hemolytic anemia in individuals with G6PD deficiency (Favism).",
@@ -577,7 +759,7 @@ async function seedClassificationRules(): Promise<void> {
     },
     // Allergens Profile
     {
-      ingredientPattern: "soy|soya|lecithin \\(soy\\)",
+      ingredientPattern: "soy",
       safetyStatus: "unknown",
       reason: "Common allergen. Often genetically modified.",
       profile: "allergens",
@@ -585,7 +767,23 @@ async function seedClassificationRules(): Promise<void> {
       createdAt: new Date(),
     },
     {
-      ingredientPattern: "wheat|gluten",
+      ingredientPattern: "soya",
+      safetyStatus: "unknown",
+      reason: "Common allergen. Often genetically modified.",
+      profile: "allergens",
+      version: 1,
+      createdAt: new Date(),
+    },
+    {
+      ingredientPattern: "lecithin (soy)",
+      safetyStatus: "unknown",
+      reason: "Common allergen. Often genetically modified.",
+      profile: "allergens",
+      version: 1,
+      createdAt: new Date(),
+    },
+    {
+      ingredientPattern: "wheat",
       safetyStatus: "unknown",
       reason: "Common allergen and source of gluten.",
       profile: "allergens",
@@ -593,7 +791,39 @@ async function seedClassificationRules(): Promise<void> {
       createdAt: new Date(),
     },
     {
-      ingredientPattern: "milk|lactose|whey|casein",
+      ingredientPattern: "gluten",
+      safetyStatus: "unknown",
+      reason: "Common allergen and source of gluten.",
+      profile: "allergens",
+      version: 1,
+      createdAt: new Date(),
+    },
+    {
+      ingredientPattern: "milk",
+      safetyStatus: "unknown",
+      reason: "Common dairy allergen.",
+      profile: "allergens",
+      version: 1,
+      createdAt: new Date(),
+    },
+    {
+      ingredientPattern: "lactose",
+      safetyStatus: "unknown",
+      reason: "Common dairy allergen.",
+      profile: "allergens",
+      version: 1,
+      createdAt: new Date(),
+    },
+    {
+      ingredientPattern: "whey",
+      safetyStatus: "unknown",
+      reason: "Common dairy allergen.",
+      profile: "allergens",
+      version: 1,
+      createdAt: new Date(),
+    },
+    {
+      ingredientPattern: "casein",
       safetyStatus: "unknown",
       reason: "Common dairy allergen.",
       profile: "allergens",
@@ -617,8 +847,63 @@ async function seedClassificationRules(): Promise<void> {
       createdAt: new Date(),
     },
     {
-      ingredientPattern:
-        "almond|cashew|walnut|hazelnut|pistachio|macadamia|pecan|brazil nut",
+      ingredientPattern: "almond",
+      safetyStatus: "unknown",
+      reason: "Common tree nut allergen.",
+      profile: "allergens",
+      version: 1,
+      createdAt: new Date(),
+    },
+    {
+      ingredientPattern: "cashew",
+      safetyStatus: "unknown",
+      reason: "Common tree nut allergen.",
+      profile: "allergens",
+      version: 1,
+      createdAt: new Date(),
+    },
+    {
+      ingredientPattern: "walnut",
+      safetyStatus: "unknown",
+      reason: "Common tree nut allergen.",
+      profile: "allergens",
+      version: 1,
+      createdAt: new Date(),
+    },
+    {
+      ingredientPattern: "hazelnut",
+      safetyStatus: "unknown",
+      reason: "Common tree nut allergen.",
+      profile: "allergens",
+      version: 1,
+      createdAt: new Date(),
+    },
+    {
+      ingredientPattern: "pistachio",
+      safetyStatus: "unknown",
+      reason: "Common tree nut allergen.",
+      profile: "allergens",
+      version: 1,
+      createdAt: new Date(),
+    },
+    {
+      ingredientPattern: "macadamia",
+      safetyStatus: "unknown",
+      reason: "Common tree nut allergen.",
+      profile: "allergens",
+      version: 1,
+      createdAt: new Date(),
+    },
+    {
+      ingredientPattern: "pecan",
+      safetyStatus: "unknown",
+      reason: "Common tree nut allergen.",
+      profile: "allergens",
+      version: 1,
+      createdAt: new Date(),
+    },
+    {
+      ingredientPattern: "brazil nut",
       safetyStatus: "unknown",
       reason: "Common tree nut allergen.",
       profile: "allergens",
@@ -634,8 +919,71 @@ async function seedClassificationRules(): Promise<void> {
       createdAt: new Date(),
     },
     {
-      ingredientPattern:
-        "shrimp|prawn|crab|lobster|mussel|clam|oyster|scallop|shellfish",
+      ingredientPattern: "shrimp",
+      safetyStatus: "unknown",
+      reason: "Common shellfish allergen.",
+      profile: "allergens",
+      version: 1,
+      createdAt: new Date(),
+    },
+    {
+      ingredientPattern: "prawn",
+      safetyStatus: "unknown",
+      reason: "Common shellfish allergen.",
+      profile: "allergens",
+      version: 1,
+      createdAt: new Date(),
+    },
+    {
+      ingredientPattern: "crab",
+      safetyStatus: "unknown",
+      reason: "Common shellfish allergen.",
+      profile: "allergens",
+      version: 1,
+      createdAt: new Date(),
+    },
+    {
+      ingredientPattern: "lobster",
+      safetyStatus: "unknown",
+      reason: "Common shellfish allergen.",
+      profile: "allergens",
+      version: 1,
+      createdAt: new Date(),
+    },
+    {
+      ingredientPattern: "mussel",
+      safetyStatus: "unknown",
+      reason: "Common shellfish allergen.",
+      profile: "allergens",
+      version: 1,
+      createdAt: new Date(),
+    },
+    {
+      ingredientPattern: "clam",
+      safetyStatus: "unknown",
+      reason: "Common shellfish allergen.",
+      profile: "allergens",
+      version: 1,
+      createdAt: new Date(),
+    },
+    {
+      ingredientPattern: "oyster",
+      safetyStatus: "unknown",
+      reason: "Common shellfish allergen.",
+      profile: "allergens",
+      version: 1,
+      createdAt: new Date(),
+    },
+    {
+      ingredientPattern: "scallop",
+      safetyStatus: "unknown",
+      reason: "Common shellfish allergen.",
+      profile: "allergens",
+      version: 1,
+      createdAt: new Date(),
+    },
+    {
+      ingredientPattern: "shellfish",
       safetyStatus: "unknown",
       reason: "Common shellfish allergen.",
       profile: "allergens",
@@ -652,7 +1000,7 @@ async function seedClassificationRules(): Promise<void> {
     },
     // Additives Profile
     {
-      ingredientPattern: "aspartame|e951",
+      ingredientPattern: "aspartame",
       safetyStatus: "unsafe",
       reason: "Artificial sweetener that may affect neurotransmitter balance.",
       profile: "additives",
@@ -660,7 +1008,15 @@ async function seedClassificationRules(): Promise<void> {
       createdAt: new Date(),
     },
     {
-      ingredientPattern: "high fructose corn syrup|hfcs",
+      ingredientPattern: "e951",
+      safetyStatus: "unsafe",
+      reason: "Artificial sweetener that may affect neurotransmitter balance.",
+      profile: "additives",
+      version: 1,
+      createdAt: new Date(),
+    },
+    {
+      ingredientPattern: "high fructose corn syrup",
       safetyStatus: "unsafe",
       reason: "Highly refined sweetener linked to metabolic issues.",
       profile: "additives",
@@ -668,7 +1024,39 @@ async function seedClassificationRules(): Promise<void> {
       createdAt: new Date(),
     },
     {
-      ingredientPattern: "sodium nitrite|sodium nitrate|e250|e251",
+      ingredientPattern: "hfcs",
+      safetyStatus: "unsafe",
+      reason: "Highly refined sweetener linked to metabolic issues.",
+      profile: "additives",
+      version: 1,
+      createdAt: new Date(),
+    },
+    {
+      ingredientPattern: "sodium nitrite",
+      safetyStatus: "unsafe",
+      reason: "Preservatives that can form nitrosamines.",
+      profile: "additives",
+      version: 1,
+      createdAt: new Date(),
+    },
+    {
+      ingredientPattern: "sodium nitrate",
+      safetyStatus: "unsafe",
+      reason: "Preservatives that can form nitrosamines.",
+      profile: "additives",
+      version: 1,
+      createdAt: new Date(),
+    },
+    {
+      ingredientPattern: "e250",
+      safetyStatus: "unsafe",
+      reason: "Preservatives that can form nitrosamines.",
+      profile: "additives",
+      version: 1,
+      createdAt: new Date(),
+    },
+    {
+      ingredientPattern: "e251",
       safetyStatus: "unsafe",
       reason: "Preservatives that can form nitrosamines.",
       profile: "additives",

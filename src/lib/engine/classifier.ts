@@ -70,7 +70,8 @@ export function classifyIngredient(
       // Only apply rules for enabled profiles
       if (!restrictionSettings[rule.profile]) continue;
 
-      const pattern = new RegExp(rule.ingredientPattern, "i");
+      const escapedPattern = escapeRegExp(rule.ingredientPattern);
+      const pattern = new RegExp(escapedPattern, "i");
       if (pattern.test(originalText) || pattern.test(canonicalName)) {
         safetyStatus = rule.safetyStatus;
         safetyReason = rule.reason;
@@ -273,4 +274,11 @@ export function getRiskLevelColor(level: "high" | "medium" | "low"): string {
     case "low":
       return "text-blue-600 bg-blue-50 border-blue-200";
   }
+}
+
+/**
+ * Escapes special characters in a string for use in a regular expression.
+ */
+function escapeRegExp(string: string): string {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
